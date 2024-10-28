@@ -2,6 +2,10 @@ use crate::automatons::dfa::*;
 
 pub type VertexId = String;
 
+pub fn format_id(id: &str) -> &str {
+    id.split_once('-').unwrap_or(("", &id)).1
+}
+
 pub enum AutomatonData {
     Edge(VertexId, VertexId, String),
     Final(VertexId),
@@ -10,6 +14,7 @@ pub enum AutomatonData {
 
 pub trait Automaton {
     fn accepts(&self, word: &str) -> bool;
+    fn view(&self);
 }
 
 pub fn parse_text_automaton(file: String) -> Box<dyn Automaton> {

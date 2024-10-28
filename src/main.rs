@@ -19,8 +19,8 @@ fn main() {
             parse_text_automaton(file)
         };
 
-        println!("{}", automat.accepts("aaa"));
-        println!("{}", automat.accepts("aaaaaa"));
-        println!("{}", automat.accepts("aaaaaaaaaa"));
+        println!("Successfully read Automaton:");
+
+        automat.view();
     }
 }
