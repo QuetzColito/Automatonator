@@ -1,6 +1,8 @@
 mod automatons;
 
-use crate::automatons::shared::*;
+use automatons::automaton::AutomatonType;
+
+use crate::automatons::parsing::*;
 use std::env;
 use std::fs;
 
@@ -13,14 +15,11 @@ fn main() {
         println!("Reading Automaton from {}", filepath);
         let file = fs::read_to_string(filepath.clone()).expect("file doesn't exist");
 
-        let automat = if filepath.ends_with(".xml") {
-            parse_xml_automaton(file)
-        } else {
-            parse_text_automaton(file)
-        };
-
+        let automat = parse_automaton(file, AutomatonType::DFA, filepath.ends_with(".xml"));
         println!("Successfully read Automaton:");
 
         automat.view();
+        assert!(automat.accepts("aaa"), "Did not accept aaa");
+        assert!(!automat.accepts("aaaa"), "Did accept aaaa");
     }
 }

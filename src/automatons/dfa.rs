@@ -1,4 +1,4 @@
-use crate::automatons::shared::*;
+use super::automaton::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -8,8 +8,8 @@ pub struct DFA {
     start_state: VertexId,
 }
 
-impl Automaton for DFA {
-    fn accepts(&self, word: &str) -> bool {
+impl DFA {
+    pub fn accepts(&self, word: &str) -> bool {
         let mut current = &self.start_state;
         let mut encountered_missing_edge = false;
         word.chars().for_each(|symbol: char| {
@@ -22,7 +22,7 @@ impl Automaton for DFA {
         self.final_states.contains(current) && !encountered_missing_edge
     }
 
-    fn view(&self) {
+    pub fn view(&self) {
         println!("Type: DFA");
         println!(
             "Final States: {}",
@@ -44,14 +44,11 @@ impl Automaton for DFA {
             })
         })
     }
-}
-
-impl DFA {
-    pub fn new(data: impl Iterator<Item = AutomatonData>) -> DFA {
+    pub fn new(data: Vec<AutomatonData>) -> DFA {
         let mut states = HashMap::new();
         let mut final_states = HashSet::new();
         let mut start_state = "".to_string();
-        data.for_each(|d| match d {
+        data.into_iter().for_each(|d| match d {
             AutomatonData::Edge(source, target, label) => {
                 let label = label.parse::<char>().unwrap_or('e');
                 states

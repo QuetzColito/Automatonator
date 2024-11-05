@@ -1,2 +1,4 @@
+pub mod automaton;
 pub mod dfa;
-pub mod shared;
+pub mod nfa;
+pub mod parsing;
