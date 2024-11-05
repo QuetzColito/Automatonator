@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use super::dfa::DFA;
 use super::nfa::NFA;
 
+// The Place with all the Boilerplate
+
 pub type VertexId = String;
 
 pub fn format_states(states: &HashSet<VertexId>) -> String {
@@ -31,6 +33,22 @@ pub enum Automaton {
 pub enum AutomatonType {
     DFA,
     NFA,
+}
+
+pub fn determine_automaton_type(typestr: &str) -> AutomatonType {
+    match typestr.to_lowercase().as_str() {
+        "dfa" => AutomatonType::DFA,
+        "nfa" => AutomatonType::NFA,
+        _ => unimplemented!("type {} is not supported", typestr),
+    }
+}
+
+pub fn path_to_automaton_type(filepath: &str) -> String {
+    vec!["dfa", "nfa"]
+        .into_iter()
+        .find(|pattern| filepath.to_lowercase().contains(pattern))
+        .expect("No Automaton Type could be determined")
+        .to_string()
 }
 
 impl Automaton {

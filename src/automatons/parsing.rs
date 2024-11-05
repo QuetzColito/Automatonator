@@ -7,19 +7,6 @@ pub fn parse_automaton(file: String, automaton_type: AutomatonType, is_xml: bool
         parse_text(file)
     };
 
-    // let mut lines = file.lines();
-    // let mut arguments = lines
-    //     .find(|value| value.trim().starts_with("t"))
-    //     .expect("No Type Line given")
-    //     .split_whitespace();
-    //
-    // arguments.next(); // drop the argument containing t
-    //
-    // return match arguments.next().expect("no actual type given in type line") {
-    //     "DFA" => Automaton::DFA(DFA::new(parse_text(file))),
-    //     _ => panic!("Type Unknown"),
-    // };
-
     match automaton_type {
         AutomatonType::DFA => Automaton::DFA(DFA::new(automaton_data)),
         AutomatonType::NFA => Automaton::NFA(NFA::new(automaton_data)),
@@ -29,11 +16,10 @@ pub fn parse_automaton(file: String, automaton_type: AutomatonType, is_xml: bool
 pub fn parse_text(file: String) -> Vec<AutomatonData> {
     file.lines()
         .filter_map(|line: &str| {
-            println!("{line}");
             let mut values = line.split_whitespace();
             if let Some(value) = values.next() {
                 match value {
-                    "c" | "t" => None, // type is already covered, do nothing
+                    "c" | "t" => None,
                     "s" => Some(AutomatonData::Start(
                         values
                             .next()

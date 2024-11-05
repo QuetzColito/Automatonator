@@ -2,6 +2,8 @@
 name = "Automatonator"
 version = "0.1.0"
 edition = "2021"
+description = "a tool for parsing and comparing automatons in text or xml exported from draw.io"
 
 [dependencies]
+clap = { version = "4.5.20", features = ["derive"] }
 roxmltree = "0.20.0"

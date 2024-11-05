@@ -27,7 +27,7 @@ impl NFA {
     }
 
     pub fn view(&self) {
-        println!("Type: DFA");
+        println!("Type: NFA");
         println!("Final States: {}", format_states(&self.final_states));
         println!("Start States: {}", format_states(&self.start_states));
         self.states.iter().for_each(|(id, map)| {
