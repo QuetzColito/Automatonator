@@ -1,7 +1,7 @@
 use super::{automaton::*, dfa::DFA, nfa::NFA};
 
-pub fn parse_automaton(file: String, automaton_type: AutomatonType, isXml: bool) -> Automaton {
-    let automaton_data = if isXml {
+pub fn parse_automaton(file: String, automaton_type: AutomatonType, is_xml: bool) -> Automaton {
+    let automaton_data = if is_xml {
         parse_xml(file)
     } else {
         parse_text(file)
@@ -101,15 +101,20 @@ pub fn parse_xml(file: String) -> Vec<AutomatonData> {
                         node.attribute("value").unwrap_or("e").to_string(),
                     ))
                 } else {
-                    Some(AutomatonData::Start(
-                        if let Some(id) = node.attribute("target") {
-                            id.to_string()
-                        } else {
-                            node.attribute("source")
-                                .expect("free floating edge")
-                                .to_string()
-                        },
-                    ))
+                    if node.has_attribute("target") || node.has_attribute("source") {
+                        Some(AutomatonData::Start(
+                            if let Some(id) = node.attribute("target") {
+                                id.to_string()
+                            } else {
+                                node.attribute("source")
+                                    .expect("source attribute existence checked earlier")
+                                    .to_string()
+                            },
+                        ))
+                    } else {
+                        println!("Ignoring free floating edge");
+                        None
+                    }
                 }
             }
         });
