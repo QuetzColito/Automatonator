@@ -9,7 +9,7 @@ pub struct Args {
     /// The Reference Automaton to test against
     pub automaton2: Option<String>,
 
-    /// The Automaton Type (dfa, nfa, pda, tm)
+    /// The Automaton Type (dfa, nfa, pda, tm), if ommited, will be inferred by filename
     #[arg(short = 't', long = "type")]
     pub automaton_type: Option<String>,
 

@@ -1,7 +1,16 @@
+use std::fs;
+
 use super::{automaton::*, dfa::DFA, nfa::NFA};
 
-pub fn parse_automaton(file: String, automaton_type: AutomatonType, is_xml: bool) -> Automaton {
-    let automaton_data = if is_xml {
+pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Automaton {
+    let file = fs::read_to_string(&filepath).expect("file doesn't exist");
+    let automaton_type = determine_automaton_type(
+        &automaton_type
+            .clone()
+            .unwrap_or(path_to_automaton_type(&filepath)),
+    );
+
+    let automaton_data = if filepath.ends_with(".xml") {
         parse_xml(file)
     } else {
         parse_text(file)
