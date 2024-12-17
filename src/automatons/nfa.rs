@@ -4,6 +4,7 @@ use std::collections::HashSet;
 
 pub struct NFA {
     states: HashMap<VertexId, HashMap<char, HashSet<VertexId>>>,
+    alphabet: Vec<char>,
     final_states: HashSet<VertexId>,
     start_states: HashSet<VertexId>,
 }
@@ -43,11 +44,13 @@ impl NFA {
     }
     pub fn new(data: Vec<AutomatonData>) -> NFA {
         let mut states = HashMap::new();
+        let mut alphabet = HashSet::new();
         let mut final_states = HashSet::new();
         let mut start_states = HashSet::new();
         data.into_iter().for_each(|d| match d {
             AutomatonData::Edge(source, target, label) => {
                 let label = label.parse::<char>().unwrap_or('e');
+                alphabet.insert(label);
                 states
                     .entry(source)
                     .or_insert(HashMap::new())
@@ -65,8 +68,13 @@ impl NFA {
         assert!(!start_states.is_empty(), "No start state given");
         NFA {
             states,
+            alphabet: alphabet.into_iter().collect(),
             final_states,
             start_states,
         }
+    }
+
+    pub fn alphabet(&self) -> &Vec<char> {
+        &self.alphabet
     }
 }

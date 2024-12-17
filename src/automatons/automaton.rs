@@ -59,6 +59,13 @@ impl Automaton {
         }
     }
 
+    pub fn alphabet(&self) -> &Vec<char> {
+        match self {
+            Automaton::DFA(dfa) => dfa.alphabet(),
+            Automaton::NFA(nfa) => nfa.alphabet(),
+        }
+    }
+
     pub fn view(&self) {
         match self {
             Automaton::DFA(dfa) => dfa.view(),

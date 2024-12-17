@@ -4,6 +4,7 @@ use std::collections::HashSet;
 
 pub struct DFA {
     states: HashMap<VertexId, HashMap<char, VertexId>>,
+    alphabet: Vec<char>,
     final_states: HashSet<VertexId>,
     start_state: VertexId,
 }
@@ -46,11 +47,13 @@ impl DFA {
     }
     pub fn new(data: Vec<AutomatonData>) -> DFA {
         let mut states = HashMap::new();
+        let mut alphabet = HashSet::new();
         let mut final_states = HashSet::new();
         let mut start_state = "".to_string();
         data.into_iter().for_each(|d| match d {
             AutomatonData::Edge(source, target, label) => {
                 let label = label.parse::<char>().unwrap_or('e');
+                alphabet.insert(label);
                 states
                     .entry(source)
                     .or_insert(HashMap::new())
@@ -69,8 +72,13 @@ impl DFA {
         assert_ne!(start_state, "", "No start state given");
         DFA {
             states,
+            alphabet: alphabet.into_iter().collect(),
             final_states,
             start_state,
         }
+    }
+
+    pub fn alphabet(&self) -> &Vec<char> {
+        &self.alphabet
     }
 }
