@@ -17,7 +17,11 @@ pub struct Args {
     #[arg(short = 'r', long = "reftype")]
     pub ref_automaton_type: Option<String>,
 
-    /// Path to a File with words to check (line format: "(0|1),word")
-    #[arg(short = 'c', long = "checks")]
+    /// Path to a File with words to check (line format: "word")
+    #[arg(short = 'c', long = "check")]
     pub testcase_file: Option<String>,
+
+    /// Path to a File with words to check for evaluation (line format: "word percentage")
+    #[arg(short = 'e', long = "eval")]
+    pub evaluation_file: Option<String>,
 }

@@ -4,6 +4,7 @@ mod automatons;
 use std::fs;
 
 use args::Args;
+use automatons::evaluation::*;
 use automatons::parsing::*;
 use clap::Parser;
 
@@ -27,30 +28,20 @@ fn main() {
             },
         );
 
-        // TODO: generate test words
-        let acceptance_ratio = vec!["aaa", "aaaaa", "aa"]
-            .iter()
-            .filter(|word| automat2.accepts(word) == automat.accepts(word))
-            .count()
-            / 2;
-        println!(
-            "Automatons answered the same on {}% of",
-            acceptance_ratio * 100
-        );
+        // Evaluate if evaluation_file given
+        if let Some(evaluation_file) = args.evaluation_file {
+            let cases = fs::read_to_string(&evaluation_file).expect("file doesn't exist");
+
+            println!(
+                "Automatons answered the same on {}% of",
+                full_comparison(&automat, &automat2, &cases)
+            );
+        }
     }
 
     // Compare to Test Cases (if given)
     if let Some(testcase_filepath) = args.testcase_file {
         let cases = fs::read_to_string(&testcase_filepath).expect("file doesn't exist");
-        let cases = cases.lines();
-
-        let count = cases.clone().count();
-
-        let acceptance_ratio = cases.filter(|word| automat.accepts(word)).count() / count;
-
-        println!(
-            "Automatons answered the same on {}% of",
-            acceptance_ratio * 100
-        );
+        fixed_test(&automat, &cases);
     }
 }
