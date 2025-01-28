@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use super::automaton::Automaton;
 
 pub fn fixed_test(automaton: &Automaton, wordlist: &str) -> u64 {

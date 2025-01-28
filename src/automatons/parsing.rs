@@ -4,13 +4,14 @@ use super::{automaton::*, dfa::DFA, nfa::NFA};
 
 pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Automaton {
     let file = fs::read_to_string(&filepath).expect("file doesn't exist");
+    dbg!(automaton_type);
     let automaton_type = determine_automaton_type(
         &automaton_type
-            .clone()
+            .clone() // .clone()
             .unwrap_or(path_to_automaton_type(&filepath)),
     );
 
-    let automaton_data = if filepath.ends_with(".xml") {
+    let automaton_data = if filepath.ends_with(".xml") || filepath.ends_with(".drawio") {
         parse_xml(file)
     } else {
         parse_text(file)
