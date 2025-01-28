@@ -31,7 +31,7 @@ impl DFA {
                 .iter()
                 .map(|id| format_id(id).to_string())
                 .reduce(|acc, id| format!("{acc}, {id}"))
-                .unwrap()
+                .expect("Automaton should have at least 1 final state")
         );
         println!("Start State: {}", format_id(&self.start_state));
         self.states.iter().for_each(|(id, map)| {
@@ -69,6 +69,8 @@ impl DFA {
                 start_state = id;
             }
         });
+        assert!(states.len() > 0, "No states given");
+        assert!(final_states.len() > 0, "No final states given");
         assert_ne!(start_state, "", "No start state given");
         DFA {
             states,
