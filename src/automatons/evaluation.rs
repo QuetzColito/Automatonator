@@ -1,3 +1,6 @@
+use rand::prelude::*;
+use rand_chacha::ChaCha8Rng;
+
 use super::automaton::Automaton;
 
 pub fn fixed_test(automaton: &Automaton, wordlist: &str) -> u64 {
@@ -47,28 +50,31 @@ pub fn fixed_comparison(
 
 pub fn generated_comparison(automaton1: &Automaton, automaton2: &Automaton) -> u64 {
     let alphabet = automaton1.alphabet();
-    (0..10)
-        .map(|l| {
-            (0..alphabet.len().pow(l))
-                .map(|seed| {
-                    let word = make_word(seed as u64, l as usize, alphabet);
-                    dbg!(&word);
-                    if automaton1.accepts(&word) == automaton2.accepts(&word) {
-                        1
-                    } else {
-                        0
-                    }
-                })
-                .sum::<u64>()
+    let passed_generated = (0..10).all(|l| {
+        (0..alphabet.len().pow(l)).all(|seed| {
+            let word = make_word(seed as u64, l as usize, alphabet);
+            dbg!(&word);
+            automaton1.accepts(&word) == automaton2.accepts(&word)
         })
-        .sum()
+    });
+    let mut rng = ChaCha8Rng::seed_from_u64(42);
+    let passed_rng = (0..1000000).all(|_| {
+        let len = rng.gen_range(0..25);
+        let seed = rng.gen_range(0..alphabet.len().pow(len)) as u64;
+        let word = make_word(seed, len as usize, alphabet);
+        automaton1.accepts(&word) == automaton2.accepts(&word)
+    });
+    if passed_generated && passed_rng {
+        1
+    } else {
+        0
+    }
 }
 
-pub fn full_comparison(automaton1: &Automaton, automaton2: &Automaton, wordlist: &str) -> u64 {
+pub fn full_comparison(automaton1: &Automaton, automaton2: &Automaton, wordlist: &str) -> f64 {
     let (fixed_reached, fixed_max) = fixed_comparison(&automaton1, &automaton2, wordlist);
     let generated_reached = generated_comparison(&automaton1, &automaton2);
-    // TODO: calculate generated_max
-    (generated_reached * 100 / 400) + fixed_reached
+    (fixed_reached + generated_reached) as f64 / (fixed_max + 1) as f64
 }
 
 pub fn make_word(seed: u64, min_length: usize, alphabet: &Vec<char>) -> String {
