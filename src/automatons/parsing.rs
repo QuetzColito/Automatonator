@@ -1,6 +1,6 @@
 use std::fs;
 
-use super::{automaton::*, dfa::DFA, nfa::NFA};
+use super::{automaton::*, dfa::DFA, nfa::NFA, pda::PDA};
 
 pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Automaton {
     let file = fs::read_to_string(&filepath).expect("file doesn't exist");
@@ -20,6 +20,7 @@ pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Aut
     match automaton_type {
         AutomatonType::DFA => Automaton::DFA(DFA::new(automaton_data)),
         AutomatonType::NFA => Automaton::NFA(NFA::new(automaton_data)),
+        AutomatonType::PDA => Automaton::PDA(PDA::new(automaton_data)),
     }
 }
 

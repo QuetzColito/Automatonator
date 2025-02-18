@@ -2,6 +2,7 @@ use std::collections::HashSet;
 
 use super::dfa::DFA;
 use super::nfa::NFA;
+use super::pda::PDA;
 
 // The Place with all the Boilerplate
 
@@ -28,17 +29,20 @@ pub enum AutomatonData {
 pub enum Automaton {
     DFA(DFA),
     NFA(NFA),
+    PDA(PDA),
 }
 
 pub enum AutomatonType {
     DFA,
     NFA,
+    PDA,
 }
 
 pub fn determine_automaton_type(typestr: &str) -> AutomatonType {
     match typestr.to_lowercase().as_str() {
         "dfa" => AutomatonType::DFA,
         "nfa" => AutomatonType::NFA,
+        "pda" => AutomatonType::PDA,
         _ => unimplemented!("type {} is not supported", typestr),
     }
 }
@@ -56,6 +60,7 @@ impl Automaton {
         match self {
             Automaton::DFA(dfa) => dfa.accepts(word),
             Automaton::NFA(nfa) => nfa.accepts(word),
+            Automaton::PDA(pda) => pda.accepts(word),
         }
     }
 
@@ -63,6 +68,7 @@ impl Automaton {
         match self {
             Automaton::DFA(dfa) => dfa.alphabet(),
             Automaton::NFA(nfa) => nfa.alphabet(),
+            Automaton::PDA(pda) => pda.alphabet(),
         }
     }
 
@@ -70,6 +76,7 @@ impl Automaton {
         match self {
             Automaton::DFA(dfa) => dfa.view(),
             Automaton::NFA(nfa) => nfa.view(),
+            Automaton::PDA(pda) => pda.view(),
         }
     }
 }
