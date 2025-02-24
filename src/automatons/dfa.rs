@@ -1,3 +1,6 @@
+use log::info;
+use log::warn;
+
 use super::automaton::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
@@ -24,8 +27,8 @@ impl DFA {
     }
 
     pub fn view(&self) {
-        println!("Type: DFA");
-        println!(
+        info!("Type: DFA");
+        info!(
             "Final States: {}",
             self.final_states
                 .iter()
@@ -33,11 +36,11 @@ impl DFA {
                 .reduce(|acc, id| format!("{acc}, {id}"))
                 .expect("Automaton should have at least 1 final state")
         );
-        println!("Start State: {}", format_id(&self.start_state));
+        info!("Start State: {}", format_id(&self.start_state));
         self.states.iter().for_each(|(id, map)| {
-            println!("State {}:", format_id(id));
+            info!("State {}:", format_id(id));
             map.iter().for_each(|(label, target)| {
-                println!(
+                info!(
                     "    {} -> {}",
                     format_id(&label.to_string()),
                     format_id(target)
@@ -64,7 +67,7 @@ impl DFA {
             }
             AutomatonData::Start(id) => {
                 if start_state != "" {
-                    println!("multiple start states in a dfa, overwriting")
+                    warn!("multiple start states in a dfa, overwriting")
                 };
                 start_state = id;
             }

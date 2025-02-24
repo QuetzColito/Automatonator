@@ -4,7 +4,6 @@ use super::{automaton::*, dfa::DFA, nfa::NFA, pda::PDA};
 
 pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Automaton {
     let file = fs::read_to_string(&filepath).expect("file doesn't exist");
-    dbg!(automaton_type);
     let automaton_type = determine_automaton_type(
         &automaton_type
             .clone() // .clone()

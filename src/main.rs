@@ -1,10 +1,8 @@
 mod args;
 mod automatons;
 
+use log::*;
 use std::fs;
-
-use rand::prelude::*;
-use rand_chacha::ChaCha8Rng;
 
 use args::Args;
 use automatons::evaluation::*;
@@ -13,16 +11,12 @@ use clap::Parser;
 
 fn main() {
     let args = Args::parse();
+    colog::init();
 
-    let mut rng = ChaCha8Rng::seed_from_u64(43);
-    println!("{}", rng.gen_range(0..100));
-    println!("{}", rng.gen_range(0..100));
-    println!("{}", rng.gen_range(0..100));
-    println!("{}", rng.gen_range(0..100));
-    println!("Reading Automaton from {}", &args.automaton);
+    info!("Reading Automaton from {}", &args.automaton);
 
     let automat = parse_automaton(args.automaton, &args.automaton_type);
-    println!("Successfully read Automaton:");
+    info!("Successfully read Automaton:");
     automat.view();
 
     // Compare to Reference Automaton (if given)
