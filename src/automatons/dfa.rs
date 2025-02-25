@@ -32,27 +32,22 @@ impl DFA {
             "Final States: {}",
             self.final_states
                 .iter()
-                .map(|id| format_id(id).to_string())
+                .map(|id| id.to_string())
                 .reduce(|acc, id| format!("{acc}, {id}"))
                 .expect("Automaton should have at least 1 final state")
         );
-        info!("Start State: {}", format_id(&self.start_state));
+        info!("Start State: {}", &self.start_state);
         self.states.iter().for_each(|(id, map)| {
-            info!("State {}:", format_id(id));
-            map.iter().for_each(|(label, target)| {
-                info!(
-                    "    {} -> {}",
-                    format_id(&label.to_string()),
-                    format_id(target)
-                )
-            })
+            info!("State {}:", id);
+            map.iter()
+                .for_each(|(label, target)| info!("    {} -> {}", &label.to_string(), target))
         })
     }
     pub fn new(data: Vec<AutomatonData>) -> DFA {
         let mut states = HashMap::new();
         let mut alphabet = HashSet::new();
         let mut final_states = HashSet::new();
-        let mut start_state = "".to_string();
+        let mut start_state = 0;
         data.into_iter().for_each(|d| match d {
             AutomatonData::Edge(source, target, label) => {
                 let label = label.parse::<char>().unwrap_or('e');
@@ -66,7 +61,7 @@ impl DFA {
                 final_states.insert(id);
             }
             AutomatonData::Start(id) => {
-                if start_state != "" {
+                if start_state != 0 {
                     warn!("multiple start states in a dfa, overwriting")
                 };
                 start_state = id;
@@ -74,7 +69,7 @@ impl DFA {
         });
         assert!(states.len() > 0, "No states given");
         assert!(final_states.len() > 0, "No final states given");
-        assert_ne!(start_state, "", "No start state given");
+        assert_ne!(start_state, 0, "No start state given");
         DFA {
             states,
             alphabet: alphabet.into_iter().collect(),

@@ -1,4 +1,6 @@
-use std::fs;
+use std::{collections::HashMap, fs};
+
+use log::info;
 
 use super::{automaton::*, dfa::DFA, nfa::NFA, pda::PDA};
 
@@ -24,6 +26,7 @@ pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Aut
 }
 
 pub fn parse_text(file: String) -> Vec<AutomatonData> {
+    let mut idgen = IdGenerator::new();
     file.lines()
         .filter_map(|line: &str| {
             let mut values = line.split_whitespace();
@@ -31,32 +34,26 @@ pub fn parse_text(file: String) -> Vec<AutomatonData> {
                 match value {
                     "c" | "t" => None,
                     "s" => Some(AutomatonData::Start(
-                        values
-                            .next()
-                            .expect("missing start state identifier")
-                            .to_string(),
+                        idgen.get(values.next().expect("missing start state identifier")),
                     )),
                     "f" => Some(AutomatonData::Final(
-                        values
-                            .next()
-                            .expect("missing final state identifier")
-                            .to_string(),
+                        idgen.get(values.next().expect("missing final state identifier")),
                     )),
                     _ => {
                         if let Some(target) = values.next() {
                             Some(AutomatonData::Edge(
-                                value.to_string(),
-                                target.to_string(),
+                                idgen.get(value),
+                                idgen.get(target),
                                 values.next().unwrap_or("e").to_string(),
                             ))
                         } else {
-                            println!("ignored pattern {line}");
+                            info!("ignored pattern {line}");
                             None
                         }
                     }
                 }
             } else {
-                println!("empty line");
+                info!("empty line");
                 None
             }
         })
@@ -66,53 +63,103 @@ pub fn parse_text(file: String) -> Vec<AutomatonData> {
 pub fn parse_xml(file: String) -> Vec<AutomatonData> {
     let data =
         roxmltree::Document::parse(&file).expect("XML Parsing Error (roxmltree threw an Error)");
+    let mut idgen = IdGenerator::new();
+    // labels can be either as a value directly on the edge or as a separate vertex linking to the edge
+    let labels: Vec<_> = data
+        .descendants()
+        .filter(|node| node.has_attribute("vertex") && node.has_attribute("style"))
+        .filter(|node| node.attribute("style").unwrap().contains("edgeLabel"))
+        .collect();
     let automaton_data = data
         .descendants()
         .filter(|node| node.has_attribute("edge") || node.has_attribute("vertex"))
-        .filter_map(|node| {
+        .flat_map(|node| {
             if node.has_attribute("vertex") {
                 if node
-                    .parent()
-                    .expect("root should have been filtered out by now")
-                    .tag_name()
-                    .name()
-                    != "root"
+                    .attribute("style")
+                    .unwrap_or("NOSTYLE")
+                    .contains("shape=doubleEllipse")
                 {
-                    Some(AutomatonData::Final(
-                        node.parent()
-                            .unwrap()
-                            .attribute("id")
-                            .expect("final vertex without id")
-                            .to_string(),
-                    ))
+                    vec![AutomatonData::Final(
+                        idgen.get(
+                            node.parent()
+                                .unwrap()
+                                .attribute("id")
+                                .expect("final vertex without id"),
+                        ),
+                    )]
                 } else {
-                    Option::None
+                    Vec::new()
                 }
             } else {
                 assert!(node.has_attribute("edge"));
                 if node.has_attribute("source") && node.has_attribute("target") {
-                    Some(AutomatonData::Edge(
-                        node.attribute("source").unwrap().to_string(),
-                        node.attribute("target").unwrap().to_string(),
-                        node.attribute("value").unwrap_or("e").to_string(),
-                    ))
+                    sanitize_label(node.attribute("value").unwrap_or_else(|| {
+                        labels
+                            .iter()
+                            .find(|label| label.attribute("parent") == node.attribute("id"))
+                            .expect("edge without label")
+                            .attribute("value")
+                            .expect("label without value")
+                    }))
+                    .into_iter()
+                    .map(|label| {
+                        AutomatonData::Edge(
+                            idgen.get(node.attribute("source").unwrap()),
+                            idgen.get(node.attribute("target").unwrap()),
+                            label,
+                        )
+                    })
+                    .collect()
                 } else {
                     if node.has_attribute("target") || node.has_attribute("source") {
-                        Some(AutomatonData::Start(
+                        vec![AutomatonData::Start(
                             if let Some(id) = node.attribute("target") {
-                                id.to_string()
+                                idgen.get(id)
                             } else {
-                                node.attribute("source")
-                                    .expect("source attribute existence checked earlier")
-                                    .to_string()
+                                idgen.get(node.attribute("source").unwrap())
                             },
-                        ))
+                        )]
                     } else {
                         println!("Ignoring free floating edge");
-                        None
+                        Vec::new()
                     }
                 }
             }
         });
     automaton_data.collect()
+}
+
+fn sanitize_label(label: &str) -> Vec<String> {
+    let label = label.replace("</div>", "");
+    let label = label.replace("<div>", "");
+    label
+        .split("<br>")
+        .map(|l| l.trim().to_owned())
+        .filter(|l| l != "")
+        .collect()
+}
+
+struct IdGenerator {
+    id_map: HashMap<String, u32>,
+    id: u32,
+}
+
+impl IdGenerator {
+    fn get(&mut self, id_str: &str) -> u32 {
+        if let Some(id) = self.id_map.get(id_str) {
+            *id
+        } else {
+            self.id += 1;
+            self.id_map.insert(id_str.to_owned(), self.id);
+            self.id
+        }
+    }
+
+    fn new() -> Self {
+        IdGenerator {
+            id_map: HashMap::new(),
+            id: 0,
+        }
+    }
 }

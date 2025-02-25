@@ -1,15 +1,15 @@
+use log::info;
+
 use super::automaton::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
-
-struct State {}
+use std::str::Split;
 
 type Symbol = char;
 type StackChar = char;
 
 pub struct PDA {
-    states:
-        HashMap<VertexId, HashMap<Symbol, HashMap<StackChar, HashSet<(VertexId, Vec<StackChar>)>>>>,
+    states: HashMap<VertexId, HashMap<(Symbol, StackChar), Vec<(VertexId, Vec<StackChar>)>>>,
     alphabet: Vec<char>,
     final_states: HashSet<VertexId>,
     start_states: HashSet<VertexId>,
@@ -23,35 +23,57 @@ impl PDA {
             .into_iter()
             .map(|state| (state, vec!['#']))
             .collect();
-        word.chars().for_each(|symbol: char| {
+        word.chars().for_each(|symbol| {
             currents = currents
-                .iter()
+                .iter_mut()
                 .flat_map(|(state, stack)| {
-                    self.states
-                        .get(state)
-                        .and_then(|nexts| nexts.get(&symbol))
-                        .and_then(|nexts| nexts.get(&stack.last().unwrap()))
-                        .and_then(|nexts| {
-                            Some(
-                                nexts
-                                    .iter()
-                                    .map(|(state, to_stack)| {
-                                        let mut stack = stack.clone();
-                                        let mut to_stack = to_stack.clone();
-                                        stack.pop();
-                                        stack.append(&mut to_stack);
-                                        (state.clone(), stack)
-                                    })
-                                    .collect(),
-                            )
-                        })
-                        .unwrap_or(HashSet::new())
+                    if stack.len() == 0 {
+                        return Vec::new();
+                    }
+
+                    let stack_char = stack.pop().unwrap();
+
+                    let nexts = self.next_states(&state, symbol, stack_char);
+                    match nexts.len() {
+                        0 => Vec::new(),
+                        1 => {
+                            let (state, mut to_stack) = nexts[0].clone();
+                            stack.append(&mut to_stack);
+                            vec![(state, stack.to_vec())]
+                        }
+                        _ => nexts
+                            .iter()
+                            .map(|(state, to_stack)| {
+                                let mut stack = stack.clone();
+                                let mut to_stack = to_stack.clone();
+                                stack.append(&mut to_stack);
+                                (state.clone(), stack)
+                            })
+                            .collect(),
+                    }
                 })
                 .collect()
         });
-        self.final_states
+        currents
             .iter()
-            .any(|f| currents.contains(&(f.clone(), vec![])))
+            .any(|(state, stack)| stack.len() == 0 && self.final_states.contains(state))
+    }
+
+    fn next_states(
+        &self,
+        state: &VertexId,
+        symbol: Symbol,
+        stack_char: StackChar,
+    ) -> Vec<(VertexId, Vec<StackChar>)> {
+        if let Some(nexts) = self
+            .states
+            .get(state)
+            .and_then(|nexts| nexts.get(&(symbol, stack_char)))
+        {
+            nexts.to_vec()
+        } else {
+            Vec::new()
+        }
     }
 
     pub fn view(&self) {
@@ -59,52 +81,36 @@ impl PDA {
         println!("Final States: {}", format_states(&self.final_states));
         println!("Start States: {}", format_states(&self.start_states));
         self.states.iter().for_each(|(id, map)| {
-            println!("State {}:", format_id(id));
+            println!("State {}:", id);
             map.iter().for_each(|(label, target)| {
-                target.iter().for_each(|(stackchar, target)| {
-                    println!(
-                        "    {}, {} -> {})",
-                        format_id(&label.to_string()),
-                        format_id(&format_states_pda(&target)),
-                        format_id(&stackchar.to_string()),
-                    )
-                });
-            })
+                println!(
+                    "    {}, {} -> {}",
+                    &label.0.to_string(),
+                    &format_states_pda(&target),
+                    &label.1.to_string(),
+                )
+            });
         })
     }
     pub fn new(data: Vec<AutomatonData>) -> PDA {
-        let mut states: HashMap<
-            VertexId,
-            HashMap<Symbol, HashMap<StackChar, HashSet<(VertexId, Vec<StackChar>)>>>,
-        > = HashMap::new();
+        let mut states = HashMap::new();
         let mut alphabet = HashSet::new();
         let mut final_states = HashSet::new();
         let mut start_states = HashSet::new();
         data.into_iter().for_each(|d| match d {
             AutomatonData::Edge(source, target, label) => {
+                info!("{label}");
                 let mut values = label.split(",");
-                let label = values
-                    .next()
-                    .expect("No Character given")
-                    .trim()
-                    .parse()
-                    .unwrap_or('e');
-                let current_stack = values
-                    .next()
-                    .expect("No Current Stackvalue given")
-                    .trim()
-                    .parse()
-                    .unwrap_or('e');
+                let label = parse_next(&mut values, "No Character given");
+                let current_stack = parse_next(&mut values, "No Current Stackvalue given");
                 let next_stack = values.next().expect("No Next Stackvalue given").trim();
                 alphabet.insert(label);
                 states
                     .entry(source)
                     .or_insert(HashMap::new())
-                    .entry(label)
-                    .or_insert(HashMap::new())
-                    .entry(current_stack)
-                    .or_insert(HashSet::new())
-                    .insert((target, next_stack.chars().collect()));
+                    .entry((label, current_stack))
+                    .or_insert(Vec::new())
+                    .push((target, next_stack.chars().collect()));
             }
             AutomatonData::Final(id) => {
                 final_states.insert(id);
@@ -127,6 +133,14 @@ impl PDA {
     }
 }
 
-fn format_states_pda(states: &HashSet<(VertexId, Vec<char>)>) -> String {
-    "TODO".to_string()
+fn parse_next(values: &mut Split<'_, &str>, error: &str) -> char {
+    values.next().expect(error).trim().parse().unwrap_or(' ')
+}
+
+fn format_states_pda(states: &Vec<(VertexId, Vec<char>)>) -> String {
+    states
+        .iter()
+        .map(|(id, to_stack)| id.to_string() + &to_stack.iter().collect::<String>())
+        .reduce(|acc, id| format!("{acc}, {id}"))
+        .unwrap()
 }

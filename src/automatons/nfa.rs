@@ -32,13 +32,9 @@ impl NFA {
         println!("Final States: {}", format_states(&self.final_states));
         println!("Start States: {}", format_states(&self.start_states));
         self.states.iter().for_each(|(id, map)| {
-            println!("State {}:", format_id(id));
+            println!("State {}:", id);
             map.iter().for_each(|(label, target)| {
-                println!(
-                    "    {} -> {}",
-                    format_id(&label.to_string()),
-                    format_id(&format_states(&target))
-                )
+                println!("    {} -> {}", &label.to_string(), &format_states(&target))
             })
         })
     }

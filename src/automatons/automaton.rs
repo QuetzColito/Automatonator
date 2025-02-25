@@ -6,18 +6,14 @@ use super::pda::PDA;
 
 // The Place with all the Boilerplate
 
-pub type VertexId = String;
+pub type VertexId = u32;
 
 pub fn format_states(states: &HashSet<VertexId>) -> String {
     states
         .iter()
-        .map(|id| format_id(id).to_string())
+        .map(|id| id.to_string())
         .reduce(|acc, id| format!("{acc}, {id}"))
         .unwrap()
-}
-
-pub fn format_id(id: &str) -> &str {
-    id.split_once('-').unwrap_or(("", &id)).1
 }
 
 pub enum AutomatonData {
@@ -48,7 +44,7 @@ pub fn determine_automaton_type(typestr: &str) -> AutomatonType {
 }
 
 pub fn path_to_automaton_type(filepath: &str) -> String {
-    vec!["dfa", "nfa"]
+    vec!["dfa", "nfa", "pda"]
         .into_iter()
         .find(|pattern| filepath.to_lowercase().contains(pattern))
         .expect("No Automaton Type could be determined")
