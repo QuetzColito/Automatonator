@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (X11; Linux x86_64; rv:134.0) Gecko/20100101 Firefox/134.0" version="26.0.16">
+  <diagram name="Seite-1" id="dv8Mnx5e1ctkn0_hirsW">
+    <mxGraphModel dx="647" dy="395" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="ayUKGRsikh4jtLAq26ye-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="ayUKGRsikh4jtLAq26ye-1" target="ayUKGRsikh4jtLAq26ye-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ayUKGRsikh4jtLAq26ye-7" value="b,A," style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ayUKGRsikh4jtLAq26ye-5">
+          <mxGeometry x="0.3036" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ayUKGRsikh4jtLAq26ye-8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="ayUKGRsikh4jtLAq26ye-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="130" y="140" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ayUKGRsikh4jtLAq26ye-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.027;entryY=0.685;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="ayUKGRsikh4jtLAq26ye-1" target="ayUKGRsikh4jtLAq26ye-1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="170" y="260" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="200" y="260" />
+              <mxPoint x="181" y="260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ayUKGRsikh4jtLAq26ye-13" value="&lt;div&gt;a,#,AA&lt;/div&gt;&lt;div&gt;a,A,AA&lt;br&gt;&lt;/div&gt;" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ayUKGRsikh4jtLAq26ye-10">
+          <mxGeometry x="-0.2168" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="ayUKGRsikh4jtLAq26ye-1" value="1" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;strokeWidth=2;fontSize=22;fontFamily=Helvetica;fontColor=default;labelBackgroundColor=none;align=center;verticalAlign=middle;fillColor=none;gradientColor=none;" vertex="1" parent="1">
+          <mxGeometry x="180" y="180" width="40" height="40" as="geometry" />
+        </mxCell>
+        <object label="2" margin="1" id="ayUKGRsikh4jtLAq26ye-2">
+          <mxCell style="ellipse;shape=doubleEllipse;whiteSpace=wrap;html=1;aspect=fixed;strokeWidth=2;fontSize=22;fixDash=0;backgroundOutline=0;comic=0;margin=3;fontFamily=Helvetica;fontColor=default;labelBackgroundColor=none;align=center;verticalAlign=middle;fillColor=none;gradientColor=none;" vertex="1" parent="1">
+            <mxGeometry x="319.9999999999999" y="170" width="40" height="40" as="geometry" />
+          </mxCell>
+        </object>
+        <mxCell id="ayUKGRsikh4jtLAq26ye-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="ayUKGRsikh4jtLAq26ye-2" target="ayUKGRsikh4jtLAq26ye-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ayUKGRsikh4jtLAq26ye-12" value="b,A," style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="ayUKGRsikh4jtLAq26ye-11">
+          <mxGeometry x="0.1881" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
