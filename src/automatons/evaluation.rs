@@ -1,3 +1,4 @@
+use log::warn;
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 
@@ -53,7 +54,7 @@ pub fn generated_comparison(automaton1: &Automaton, automaton2: &Automaton) -> u
     let passed_generated = (0..10).all(|l| {
         (0..alphabet.len().pow(l)).all(|seed| {
             let word = make_word(seed as u64, l as usize, alphabet);
-            dbg!(&word);
+            warn!("did not agree on '{}'", &word);
             automaton1.accepts(&word) == automaton2.accepts(&word)
         })
     });

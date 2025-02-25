@@ -30,6 +30,9 @@ fn main() {
             },
         );
 
+        info!("Successfully read second Automaton:");
+        automat2.view();
+
         // Evaluate if evaluation_file given
         if let Some(evaluation_file) = args.evaluation_file {
             let cases = fs::read_to_string(&evaluation_file).expect("file doesn't exist");
@@ -38,6 +41,12 @@ fn main() {
                 "Automatons answered the same on {}% of",
                 full_comparison(&automat, &automat2, &cases)
             );
+        } else {
+            if generated_comparison(&automat, &automat2) == 1 {
+                info!("passed generated comparison")
+            } else {
+                warn!("did not pass generated comparison")
+            }
         }
     }
 
