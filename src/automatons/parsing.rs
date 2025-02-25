@@ -131,10 +131,10 @@ pub fn parse_xml(file: String) -> Vec<AutomatonData> {
 }
 
 fn sanitize_label(label: &str) -> Vec<String> {
-    let label = label.replace("</div>", "");
+    let label = label.replace("<br>", "");
     let label = label.replace("<div>", "");
     label
-        .split("<br>")
+        .split("</div>")
         .map(|l| l.trim().to_owned())
         .filter(|l| l != "")
         .collect()
