@@ -77,17 +77,17 @@ impl PDA {
     }
 
     pub fn view(&self) {
-        println!("Type: NFA");
+        println!("Type: PDA");
         println!("Final States: {}", format_states(&self.final_states));
         println!("Start States: {}", format_states(&self.start_states));
         self.states.iter().for_each(|(id, map)| {
             println!("State {}:", id);
             map.iter().for_each(|(label, target)| {
                 println!(
-                    "    {}, {} -> {}",
+                    "    {} {} -> {}",
                     &label.0.to_string(),
-                    &format_states_pda(&target),
                     &label.1.to_string(),
+                    &format_states_pda(&target),
                 )
             });
         })
