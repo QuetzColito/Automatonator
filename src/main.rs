@@ -1,13 +1,14 @@
 mod args;
 mod automatons;
+mod shared;
 
 use log::*;
 use std::fs;
 
 use args::Args;
-use automatons::evaluation::*;
-use automatons::parsing::*;
 use clap::Parser;
+use shared::evaluation::*;
+use shared::parsing::*;
 
 fn main() {
     let args = Args::parse();
@@ -41,12 +42,10 @@ fn main() {
                 "Automatons answered the same on {}% of",
                 full_comparison(&automat, &automat2, &cases)
             );
+        } else if generated_comparison(&automat, &automat2) == 1 {
+            info!("passed generated comparison")
         } else {
-            if generated_comparison(&automat, &automat2) == 1 {
-                info!("passed generated comparison")
-            } else {
-                warn!("did not pass generated comparison")
-            }
+            warn!("did not pass generated comparison")
         }
     }
 

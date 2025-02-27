@@ -1,7 +1,8 @@
-use super::automaton::*;
+use crate::shared::automaton::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+#[allow(clippy::upper_case_acronyms)]
 pub struct NFA {
     states: HashMap<VertexId, HashMap<char, HashSet<VertexId>>>,
     alphabet: Vec<char>,
@@ -39,7 +40,7 @@ impl NFA {
         self.states.iter().for_each(|(id, map)| {
             println!("State {}:", id);
             map.iter().for_each(|(label, target)| {
-                println!("    {} -> {}", &label.to_string(), &format_states(&target))
+                println!("    {} -> {}", &label.to_string(), &format_states(target))
             })
         })
     }

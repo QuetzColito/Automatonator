@@ -1,15 +1,18 @@
 use log::info;
 
-use super::automaton::*;
+use crate::shared::automaton::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::str::Split;
 
 type Symbol = char;
 type StackChar = char;
+type Destinations = Vec<(VertexId, Vec<StackChar>)>;
+type Transitions = HashMap<(Symbol, StackChar), Destinations>;
 
+#[allow(clippy::upper_case_acronyms)]
 pub struct PDA {
-    states: HashMap<VertexId, HashMap<(Symbol, StackChar), Vec<(VertexId, Vec<StackChar>)>>>,
+    states: HashMap<VertexId, Transitions>,
     alphabet: Vec<char>,
     final_states: HashSet<VertexId>,
     start_states: HashSet<VertexId>,
@@ -27,13 +30,13 @@ impl PDA {
             currents = currents
                 .iter_mut()
                 .flat_map(|(state, stack)| {
-                    if stack.len() == 0 {
+                    if stack.is_empty() {
                         return Vec::new();
                     }
 
                     let stack_char = stack.pop().unwrap();
 
-                    let nexts = self.next_states(&state, symbol, stack_char);
+                    let nexts = self.next_states(state, symbol, stack_char);
                     match nexts.len() {
                         0 => Vec::new(),
                         1 => {
@@ -47,7 +50,7 @@ impl PDA {
                                 let mut stack = stack.clone();
                                 let mut to_stack = to_stack.clone();
                                 stack.append(&mut to_stack);
-                                (state.clone(), stack)
+                                (*state, stack)
                             })
                             .collect(),
                     }
@@ -56,7 +59,7 @@ impl PDA {
         });
         currents
             .iter()
-            .any(|(state, stack)| stack.len() == 0 && self.final_states.contains(state))
+            .any(|(state, stack)| stack.is_empty() && self.final_states.contains(state))
     }
 
     fn next_states(
@@ -87,7 +90,7 @@ impl PDA {
                     "    {} {} -> {}",
                     &label.0.to_string(),
                     &label.1.to_string(),
-                    &format_states_pda(&target),
+                    &format_states_pda(target),
                 )
             });
         })
@@ -137,7 +140,7 @@ fn parse_next(values: &mut Split<'_, &str>, error: &str) -> char {
     values.next().expect(error).trim().parse().unwrap_or(' ')
 }
 
-fn format_states_pda(states: &Vec<(VertexId, Vec<char>)>) -> String {
+fn format_states_pda(states: &[(VertexId, Vec<char>)]) -> String {
     states
         .iter()
         .map(|(id, to_stack)| id.to_string() + &to_stack.iter().collect::<String>())

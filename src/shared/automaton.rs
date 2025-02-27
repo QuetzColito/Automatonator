@@ -1,8 +1,6 @@
 use std::collections::HashSet;
 
-use super::dfa::DFA;
-use super::nfa::NFA;
-use super::pda::PDA;
+use crate::automatons::{dfa::DFA, nfa::NFA, pda::PDA};
 
 // The Place with all the Boilerplate
 
@@ -22,12 +20,14 @@ pub enum AutomatonData {
     Start(VertexId),
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub enum Automaton {
     DFA(DFA),
     NFA(NFA),
     PDA(PDA),
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub enum AutomatonType {
     DFA,
     NFA,

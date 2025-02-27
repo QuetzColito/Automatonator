@@ -1,10 +1,12 @@
 use log::info;
 use log::warn;
 
-use super::automaton::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+use crate::shared::automaton::*;
+
+#[allow(clippy::upper_case_acronyms)]
 pub struct DFA {
     states: HashMap<VertexId, HashMap<char, VertexId>>,
     alphabet: Vec<char>,
@@ -67,8 +69,8 @@ impl DFA {
                 start_state = id;
             }
         });
-        assert!(states.len() > 0, "No states given");
-        assert!(final_states.len() > 0, "No final states given");
+        assert!(!states.is_empty(), "No states given");
+        assert!(!final_states.is_empty(), "No final states given");
         assert_ne!(start_state, 0, "No start state given");
         DFA {
             states,

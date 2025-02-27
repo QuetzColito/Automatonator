@@ -3,7 +3,9 @@ use std::{collections::HashMap, fs, vec};
 use log::info;
 use roxmltree::Node;
 
-use super::{automaton::*, dfa::DFA, nfa::NFA, pda::PDA};
+use crate::automatons::{dfa::DFA, nfa::NFA, pda::PDA};
+
+use super::automaton::*;
 
 pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Automaton {
     let file = fs::read_to_string(&filepath).expect("file doesn't exist");

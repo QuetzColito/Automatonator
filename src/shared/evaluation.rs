@@ -80,12 +80,12 @@ pub fn generated_comparison(automaton1: &Automaton, automaton2: &Automaton) -> u
 }
 
 pub fn full_comparison(automaton1: &Automaton, automaton2: &Automaton, wordlist: &str) -> f64 {
-    let (fixed_reached, fixed_max) = fixed_comparison(&automaton1, &automaton2, wordlist);
-    let generated_reached = generated_comparison(&automaton1, &automaton2);
+    let (fixed_reached, fixed_max) = fixed_comparison(automaton1, automaton2, wordlist);
+    let generated_reached = generated_comparison(automaton1, automaton2);
     (fixed_reached + generated_reached) as f64 / (fixed_max + 1) as f64
 }
 
-pub fn make_word(seed: u64, min_length: usize, alphabet: &Vec<char>) -> String {
+pub fn make_word(seed: u64, min_length: usize, alphabet: &[char]) -> String {
     let mut seed = seed;
     let s = alphabet.len() as u64;
     let mut out = String::new();
@@ -93,7 +93,7 @@ pub fn make_word(seed: u64, min_length: usize, alphabet: &Vec<char>) -> String {
     while seed >= s {
         let digit = seed % s;
         out.push(alphabet[digit as usize]);
-        seed = seed / s;
+        seed /= s;
     }
     out.push(alphabet[seed as usize]);
 
