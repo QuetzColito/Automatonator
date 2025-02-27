@@ -16,7 +16,12 @@ impl NFA {
             currents = currents
                 .iter()
                 .flat_map(|current| {
-                    if let Some(next) = self.states.get(current).unwrap().get(&symbol) {
+                    if let Some(next) = self
+                        .states
+                        .get(current)
+                        .expect("tried to access non-existant state")
+                        .get(&symbol)
+                    {
                         next.clone()
                     } else {
                         HashSet::new()

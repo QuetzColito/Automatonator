@@ -54,8 +54,11 @@ pub fn generated_comparison(automaton1: &Automaton, automaton2: &Automaton) -> u
     let passed_generated = (0..10).all(|l| {
         (0..alphabet.len().pow(l)).all(|seed| {
             let word = make_word(seed as u64, l as usize, alphabet);
-            warn!("did not agree on '{}'", &word);
-            automaton1.accepts(&word) == automaton2.accepts(&word)
+            let accepts = automaton1.accepts(&word) == automaton2.accepts(&word);
+            if !accepts {
+                warn!("did not agree on '{}'", &word)
+            };
+            accepts
         })
     });
     let mut rng = ChaCha8Rng::seed_from_u64(42);
@@ -63,7 +66,11 @@ pub fn generated_comparison(automaton1: &Automaton, automaton2: &Automaton) -> u
         let len = rng.gen_range(0..25);
         let seed = rng.gen_range(0..alphabet.len().pow(len)) as u64;
         let word = make_word(seed, len as usize, alphabet);
-        automaton1.accepts(&word) == automaton2.accepts(&word)
+        let accepts = automaton1.accepts(&word) == automaton2.accepts(&word);
+        if !accepts {
+            warn!("did not agree on '{}'", &word)
+        };
+        accepts
     });
     if passed_generated && passed_rng {
         1

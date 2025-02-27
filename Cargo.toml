@@ -1,6 +1,6 @@
 [package]
 name = "Automatonator"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "a tool for parsing and comparing automatons in text or xml exported from draw.io"
 

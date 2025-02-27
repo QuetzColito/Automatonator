@@ -1,6 +1,7 @@
-use std::{collections::HashMap, fs};
+use std::{collections::HashMap, fs, vec};
 
 use log::info;
+use roxmltree::Node;
 
 use super::{automaton::*, dfa::DFA, nfa::NFA, pda::PDA};
 
@@ -67,19 +68,14 @@ pub fn parse_xml(file: String) -> Vec<AutomatonData> {
     // labels can be either as a value directly on the edge or as a separate vertex linking to the edge
     let labels: Vec<_> = data
         .descendants()
-        .filter(|node| node.has_attribute("vertex") && node.has_attribute("style"))
-        .filter(|node| node.attribute("style").unwrap().contains("edgeLabel"))
+        .filter(|node| node.has_attribute("vertex") && has_style(node, "edgeLabel"))
         .collect();
     let automaton_data = data
         .descendants()
         .filter(|node| node.has_attribute("edge") || node.has_attribute("vertex"))
         .flat_map(|node| {
             if node.has_attribute("vertex") {
-                if node
-                    .attribute("style")
-                    .unwrap_or("NOSTYLE")
-                    .contains("shape=doubleEllipse")
-                {
+                if has_style(&node, "shape=doubleEllipse") {
                     vec![AutomatonData::Final(
                         idgen.get(
                             node.parent()
@@ -94,49 +90,83 @@ pub fn parse_xml(file: String) -> Vec<AutomatonData> {
             } else {
                 assert!(node.has_attribute("edge"));
                 if node.has_attribute("source") && node.has_attribute("target") {
-                    sanitize_label(node.attribute("value").unwrap_or_else(|| {
-                        labels
-                            .iter()
-                            .find(|label| label.attribute("parent") == node.attribute("id"))
-                            .expect("edge without label")
-                            .attribute("value")
-                            .expect("label without value")
-                    }))
-                    .into_iter()
-                    .map(|label| {
-                        AutomatonData::Edge(
-                            idgen.get(node.attribute("source").unwrap()),
-                            idgen.get(node.attribute("target").unwrap()),
-                            label,
-                        )
-                    })
-                    .collect()
-                } else {
-                    if node.has_attribute("target") || node.has_attribute("source") {
-                        vec![AutomatonData::Start(
-                            if let Some(id) = node.attribute("target") {
-                                idgen.get(id)
-                            } else {
-                                idgen.get(node.attribute("source").unwrap())
-                            },
-                        )]
-                    } else {
-                        println!("Ignoring free floating edge");
-                        Vec::new()
+                    let id = node.attribute("id").expect("label without id");
+                    let mut label = node
+                        .attribute("value")
+                        .unwrap_or(find_related_label(id, &labels));
+                    if label.is_empty() {
+                        label = find_related_label(id, &labels)
                     }
+                    sanitize_label(label)
+                        .into_iter()
+                        .flat_map(|label| {
+                            let forward = AutomatonData::Edge(
+                                idgen.get(node.attribute("source").unwrap()),
+                                idgen.get(node.attribute("target").unwrap()),
+                                label.clone(),
+                            );
+                            let backward = AutomatonData::Edge(
+                                idgen.get(node.attribute("target").unwrap()),
+                                idgen.get(node.attribute("source").unwrap()),
+                                label,
+                            );
+                            // Default for startarrow is none, while default for end arrow is defaultArrow
+                            let has_end_arrow = !has_style(&node, "endarrow=none");
+                            let has_start_arrow = has_style(&node, "startarrow=")
+                                && !has_style(&node, "startarrow=none");
+
+                            if has_start_arrow == has_end_arrow {
+                                vec![forward, backward]
+                            } else if has_start_arrow {
+                                vec![backward]
+                            } else {
+                                assert!(has_end_arrow, "Logic Error in Arrow detection");
+                                vec![forward]
+                            }
+                        })
+                        .collect()
+                } else if node.has_attribute("target") || node.has_attribute("source") {
+                    vec![AutomatonData::Start(
+                        if let Some(id) = node.attribute("target") {
+                            idgen.get(id)
+                        } else {
+                            idgen.get(node.attribute("source").unwrap())
+                        },
+                    )]
+                } else {
+                    println!("Ignoring free floating edge");
+                    Vec::new()
                 }
             }
         });
     automaton_data.collect()
 }
 
+fn find_related_label<'a>(id: &'a str, labels: &'a Vec<Node<'_, '_>>) -> &'a str {
+    labels
+        .iter()
+        .find(|label| label.attribute("parent").expect("label without parent") == id)
+        .expect("edge without label")
+        .attribute("value")
+        .expect("label without value")
+}
+
+fn has_style(node: &Node<'_, '_>, style: &str) -> bool {
+    node.attribute("style")
+        .unwrap_or("NOSTYLE")
+        .to_lowercase()
+        .contains(&style.to_lowercase())
+}
+
 fn sanitize_label(label: &str) -> Vec<String> {
     let label = label.replace("<br>", "");
-    let label = label.replace("<div>", "");
     label
-        .split("</div>")
+        .split("div")
+        .map(|l| l.replace("<", ""))
+        .map(|l| l.replace(">", ""))
+        .map(|l| l.replace("/", ""))
         .map(|l| l.trim().to_owned())
-        .filter(|l| l != "")
+        .filter(|l| !l.is_empty())
         .collect()
 }
 
@@ -151,6 +181,7 @@ impl IdGenerator {
             *id
         } else {
             self.id += 1;
+            info!("{} gets mapped to {}", id_str, self.id);
             self.id_map.insert(id_str.to_owned(), self.id);
             self.id
         }
