@@ -83,7 +83,9 @@ impl PDA {
         println!("Type: PDA");
         println!("Final States: {}", format_states(&self.final_states));
         println!("Start States: {}", format_states(&self.start_states));
-        self.states.iter().for_each(|(id, map)| {
+        let mut states: Vec<_> = self.states.iter().collect();
+        states.sort_by_key(|&(key, _)| key);
+        states.iter().for_each(|(id, map)| {
             println!("State {}:", id);
             map.iter().for_each(|(label, target)| {
                 println!(

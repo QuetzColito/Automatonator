@@ -39,7 +39,9 @@ impl DFA {
                 .expect("Automaton should have at least 1 final state")
         );
         info!("Start State: {}", &self.start_state);
-        self.states.iter().for_each(|(id, map)| {
+        let mut states: Vec<_> = self.states.iter().collect();
+        states.sort_by_key(|&(key, _)| key);
+        states.iter().for_each(|(id, map)| {
             info!("State {}:", id);
             map.iter()
                 .for_each(|(label, target)| info!("    {} -> {}", &label.to_string(), target))
