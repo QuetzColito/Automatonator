@@ -11,7 +11,7 @@ pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Aut
     let file = fs::read_to_string(&filepath).expect("file doesn't exist");
     let automaton_type = determine_automaton_type(
         &automaton_type
-            .clone() // .clone()
+            .clone()
             .unwrap_or(path_to_automaton_type(&filepath)),
     );
 
@@ -28,7 +28,7 @@ pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Aut
     }
 }
 
-pub fn parse_text(file: String) -> Vec<AutomatonData> {
+fn parse_text(file: String) -> Vec<AutomatonData> {
     let mut idgen = IdGenerator::new();
     file.lines()
         .filter_map(|line: &str| {
@@ -63,19 +63,21 @@ pub fn parse_text(file: String) -> Vec<AutomatonData> {
         .collect()
 }
 
-pub fn parse_xml(file: String) -> Vec<AutomatonData> {
+fn parse_xml(file: String) -> Vec<AutomatonData> {
     let data =
         roxmltree::Document::parse(&file).expect("XML Parsing Error (roxmltree threw an Error)");
     let mut idgen = IdGenerator::new();
     // labels can be either as a value directly on the edge or as a separate vertex linking to the edge
+    // we extract the labels that are vertices early to be able to loop over them when needed
     let labels: Vec<_> = data
         .descendants()
         .filter(|node| node.has_attribute("vertex") && has_style(node, "edgeLabel"))
         .collect();
-    let automaton_data = data
-        .descendants()
+    // Look through all nodes
+    data.descendants()
         .filter(|node| node.has_attribute("edge") || node.has_attribute("vertex"))
         .flat_map(|node| {
+            // Find final states
             if node.has_attribute("vertex") {
                 if has_style(&node, "shape=doubleEllipse") {
                     vec![AutomatonData::Final(
@@ -90,18 +92,21 @@ pub fn parse_xml(file: String) -> Vec<AutomatonData> {
                     Vec::new()
                 }
             } else {
+                // Parse edges
                 assert!(node.has_attribute("edge"));
                 if node.has_attribute("source") && node.has_attribute("target") {
                     let id = node.attribute("id").expect("label without id");
                     let mut label = node
-                        .attribute("value")
-                        .unwrap_or(find_related_label(id, &labels));
+                        .attribute("value") // check if edge has label as value
+                        .unwrap_or_else(|| find_related_label(id, &labels)); // else try to find a label
                     if label.is_empty() {
+                        // make sure label didnt have an empty value
                         label = find_related_label(id, &labels)
                     }
-                    sanitize_label(label)
+                    sanitize_label(label) // might split label up into multiple lines
                         .into_iter()
                         .flat_map(|label| {
+                            // prepare both to make last part more readable
                             let forward = AutomatonData::Edge(
                                 idgen.get(node.attribute("source").unwrap()),
                                 idgen.get(node.attribute("target").unwrap()),
@@ -112,11 +117,13 @@ pub fn parse_xml(file: String) -> Vec<AutomatonData> {
                                 idgen.get(node.attribute("source").unwrap()),
                                 label,
                             );
+                            // check arrow direction
                             // Default for startarrow is none, while default for end arrow is defaultArrow
                             let has_end_arrow = !has_style(&node, "endarrow=none");
                             let has_start_arrow = has_style(&node, "startarrow=")
                                 && !has_style(&node, "startarrow=none");
 
+                            // 3 Different Scenarios
                             if has_start_arrow == has_end_arrow {
                                 vec![forward, backward]
                             } else if has_start_arrow {
@@ -128,23 +135,27 @@ pub fn parse_xml(file: String) -> Vec<AutomatonData> {
                         })
                         .collect()
                 } else if node.has_attribute("target") || node.has_attribute("source") {
+                    // Edge only connected to 1 Vertex, this is a start identifier
                     vec![AutomatonData::Start(
-                        if let Some(id) = node.attribute("target") {
-                            idgen.get(id)
-                        } else {
-                            idgen.get(node.attribute("source").unwrap())
-                        },
+                        // must be either source or target
+                        idgen.get(
+                            node.attribute("target")
+                                .unwrap_or_else(|| node.attribute("source").unwrap()),
+                        ),
                     )]
                 } else {
-                    println!("Ignoring free floating edge");
+                    info!("Ignoring free floating edge");
                     Vec::new()
                 }
             }
-        });
-    automaton_data.collect()
+        })
+        .collect()
 }
 
+// Looks for a label which parent is the given id of an Edge
+// Panics if a label doesnt have a parent or it cant find a label
 fn find_related_label<'a>(id: &'a str, labels: &'a Vec<Node<'_, '_>>) -> &'a str {
+    info!("{}", id);
     labels
         .iter()
         .find(|label| label.attribute("parent").expect("label without parent") == id)
@@ -153,6 +164,7 @@ fn find_related_label<'a>(id: &'a str, labels: &'a Vec<Node<'_, '_>>) -> &'a str
         .expect("label without value")
 }
 
+// Helper function to check if the style of a Node contains a str
 fn has_style(node: &Node<'_, '_>, style: &str) -> bool {
     node.attribute("style")
         .unwrap_or("NOSTYLE")
@@ -160,18 +172,23 @@ fn has_style(node: &Node<'_, '_>, style: &str) -> bool {
         .contains(&style.to_lowercase())
 }
 
+// Split the weird multiline label syntax of drawio and remove the tags
 fn sanitize_label(label: &str) -> Vec<String> {
     let label = label.replace("<br>", "");
     label
         .split("div")
-        .map(|l| l.replace("<", ""))
-        .map(|l| l.replace(">", ""))
-        .map(|l| l.replace("/", ""))
-        .map(|l| l.trim().to_owned())
+        .map(|l| {
+            l.replace("<", "")
+                .replace(">", "")
+                .replace("/", "")
+                .trim()
+                .to_owned()
+        })
         .filter(|l| !l.is_empty())
         .collect()
 }
 
+// Maps all ids to simpler numbers
 struct IdGenerator {
     id_map: HashMap<String, u32>,
     id: u32,
