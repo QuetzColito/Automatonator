@@ -5,6 +5,8 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 
 use crate::shared::automaton::*;
+use crate::shared::utils::logcheck_e;
+use crate::shared::utils::logcheck_w;
 
 #[allow(clippy::upper_case_acronyms)]
 pub struct DFA {
@@ -71,9 +73,11 @@ impl DFA {
                 start_state = id;
             }
         });
-        assert!(!states.is_empty(), "No states given");
-        assert!(!final_states.is_empty(), "No final states given");
-        assert_ne!(start_state, 0, "No start state given");
+
+        logcheck_e(states.is_empty(), "No states given");
+        logcheck_w(final_states.is_empty(), "No final states given");
+        logcheck_e(start_state == 0, "No start state given");
+
         DFA {
             states,
             alphabet: alphabet.into_iter().collect(),

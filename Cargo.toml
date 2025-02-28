@@ -1,5 +1,5 @@
 [package]
-name = "Automatonator"
+name = "automatonator"
 version = "0.1.1"
 edition = "2021"
 description = "a tool for parsing and comparing automatons in text or xml exported from draw.io"

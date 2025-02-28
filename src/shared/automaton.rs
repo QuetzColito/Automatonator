@@ -1,18 +1,8 @@
-use std::collections::HashSet;
-
 use crate::automatons::{dfa::DFA, nfa::NFA, pda::PDA};
 
 // The Place with all the Boilerplate
 
 pub type VertexId = u32;
-
-pub fn format_states(states: &HashSet<VertexId>) -> String {
-    states
-        .iter()
-        .map(|id| id.to_string())
-        .reduce(|acc, id| format!("{acc}, {id}"))
-        .unwrap()
-}
 
 pub enum AutomatonData {
     Edge(VertexId, VertexId, String),

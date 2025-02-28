@@ -1,6 +1,7 @@
 use log::info;
 
 use crate::shared::automaton::*;
+use crate::shared::utils::format_states;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::str::Split;

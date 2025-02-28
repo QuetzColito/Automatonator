@@ -1,4 +1,5 @@
 use crate::shared::automaton::*;
+use crate::shared::utils::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
 

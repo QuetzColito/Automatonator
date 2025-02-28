@@ -1,6 +1,7 @@
-mod args;
-mod automatons;
-mod shared;
+pub mod args;
+pub mod automatons;
+pub mod shared;
+pub mod tests;
 
 use log::*;
 use std::fs;
