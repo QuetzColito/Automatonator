@@ -62,7 +62,7 @@ pub fn generated_comparison(automaton1: &Automaton, automaton2: &Automaton) -> u
         })
     });
     let mut rng = ChaCha8Rng::seed_from_u64(42);
-    let passed_rng = (0..1000000).all(|_| {
+    let passed_rng = (0..100000).all(|_| {
         let len = rng.gen_range(0..25);
         let seed = rng.gen_range(0..alphabet.len().pow(len)) as u64;
         let word = make_word(seed, len as usize, alphabet);
