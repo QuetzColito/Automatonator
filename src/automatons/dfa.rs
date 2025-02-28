@@ -21,7 +21,7 @@ impl DFA {
         let mut current = &self.start_state;
         let mut encountered_missing_edge = false;
         word.chars().for_each(|symbol: char| {
-            if let Some(next) = self.states.get(current).unwrap().get(&symbol) {
+            if let Some(next) = self.states.get(current).and_then(|s| s.get(&symbol)) {
                 current = next;
             } else {
                 encountered_missing_edge = true;

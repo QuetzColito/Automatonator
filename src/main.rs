@@ -17,14 +17,14 @@ fn main() {
 
     info!("Reading Automaton from {}", &args.automaton);
 
-    let automat = parse_automaton(args.automaton, &args.automaton_type);
+    let automat = parse_automaton(&args.automaton, &args.automaton_type);
     info!("Successfully read Automaton:");
     automat.view();
 
     // Compare to Reference Automaton (if given)
     if let Some(filepath2) = args.automaton2 {
         let automat2 = parse_automaton(
-            filepath2,
+            &filepath2,
             if args.ref_automaton_type.is_some() {
                 &args.ref_automaton_type
             } else {

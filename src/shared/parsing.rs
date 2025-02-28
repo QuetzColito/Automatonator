@@ -7,12 +7,13 @@ use crate::automatons::{dfa::DFA, nfa::NFA, pda::PDA};
 
 use super::automaton::*;
 
-pub fn parse_automaton(filepath: String, automaton_type: &Option<String>) -> Automaton {
-    let file = fs::read_to_string(&filepath).expect("file doesn't exist");
+pub fn parse_automaton(filepath: &str, automaton_type: &Option<String>) -> Automaton {
+    let file =
+        fs::read_to_string(filepath).unwrap_or_else(|_| panic!("file {} doesnt exist", &filepath));
     let automaton_type = determine_automaton_type(
         &automaton_type
             .clone()
-            .unwrap_or(path_to_automaton_type(&filepath)),
+            .unwrap_or(path_to_automaton_type(filepath)),
     );
 
     let automaton_data = if filepath.ends_with(".xml") || filepath.ends_with(".drawio") {
@@ -80,14 +81,14 @@ fn parse_xml(file: String) -> Vec<AutomatonData> {
             // Find final states
             if node.has_attribute("vertex") {
                 if has_style(&node, "shape=doubleEllipse") {
-                    vec![AutomatonData::Final(
-                        idgen.get(
+                    vec![AutomatonData::Final(idgen.get(
+                        node.attribute("id").unwrap_or_else(|| {
                             node.parent()
-                                .unwrap()
+                                .expect("final vertex without id and parent")
                                 .attribute("id")
-                                .expect("final vertex without id"),
-                        ),
-                    )]
+                                .expect("final vertex without id")
+                        }),
+                    ))]
                 } else {
                     Vec::new()
                 }
