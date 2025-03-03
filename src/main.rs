@@ -10,9 +10,12 @@ use args::Args;
 use clap::Parser;
 use shared::evaluation::*;
 use shared::parsing::*;
+use std::time::Instant;
 
 fn main() {
+    let now = Instant::now();
     let args = Args::parse();
+
     colog::init();
 
     info!("Reading Automaton from {}", &args.automaton);
@@ -55,4 +58,7 @@ fn main() {
         let cases = fs::read_to_string(&testcase_filepath).expect("file doesn't exist");
         fixed_test(&automat, &cases);
     }
+
+    let elapsed = now.elapsed();
+    println!("Took: {:.2?}", elapsed);
 }
