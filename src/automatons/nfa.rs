@@ -17,11 +17,8 @@ impl NFA {
         let mut currents: VecDeque<_> = self.start_states.iter().collect();
         for symbol in word.chars() {
             for _ in 0..currents.len() {
-                if let Some(next) = self
-                    .states
-                    .get(currents.pop_front().unwrap())
-                    .and_then(|s| s.get(&symbol))
-                {
+                let current = currents.pop_front().unwrap();
+                if let Some(next) = self.states.get(current).and_then(|s| s.get(&symbol)) {
                     for s in next.iter() {
                         currents.push_back(s);
                     }

@@ -1,10 +1,8 @@
-use std::collections::HashSet;
-
 use log::{error, warn};
 
 use super::automaton::VertexId;
 
-pub fn format_states(states: &Vec<VertexId>) -> String {
+pub fn format_states(states: &[VertexId]) -> String {
     states
         .iter()
         .map(|id| id.to_string())

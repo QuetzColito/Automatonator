@@ -1,9 +1,8 @@
-use log::info;
-
 use crate::shared::automaton::*;
 use crate::shared::utils::format_states;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::str::Split;
 
 type Symbol = char;
@@ -27,57 +26,64 @@ impl PDA {
             .into_iter()
             .map(|state| (state, vec!['#']))
             .collect();
-        word.chars().for_each(|symbol| {
-            currents = currents
-                .iter_mut()
-                .flat_map(|(state, stack)| {
-                    if stack.is_empty() {
-                        return Vec::new();
-                    }
-
-                    let stack_char = stack.pop().unwrap();
-
-                    let nexts = self.next_states(state, symbol, stack_char);
-                    match nexts.len() {
-                        0 => Vec::new(),
-                        1 => {
-                            let (state, mut to_stack) = nexts[0].clone();
-                            stack.append(&mut to_stack);
-                            vec![(state, stack.to_vec())]
+        for symbol in word.chars() {
+            let mut new = Vec::new();
+            for current in currents.into_iter() {
+                let state = current.0;
+                let mut stack = current.1;
+                let stack_char = stack.pop();
+                if let Some(nexts) = self
+                    .states
+                    .get(&state)
+                    .and_then(|s| stack_char.and_then(|stack_char| s.get(&(symbol, stack_char))))
+                {
+                    for next in nexts.iter() {
+                        let mut stack = stack.clone();
+                        stack.append(&mut next.1.clone());
+                        if !new.contains(&(next.0, stack.clone())) {
+                            new.push((next.0, stack));
                         }
-                        _ => nexts
-                            .iter()
-                            .map(|(state, to_stack)| {
-                                let mut stack = stack.clone();
-                                let mut to_stack = to_stack.clone();
-                                stack.append(&mut to_stack);
-                                (*state, stack)
-                            })
-                            .collect(),
                     }
-                })
-                .collect()
-        });
+
+                    let mut epsilonstates = VecDeque::new();
+                    epsilonstates.push_back((state, stack.clone()));
+
+                    let mut found_new = true;
+                    while found_new {
+                        found_new = false;
+                        for _ in 0..epsilonstates.len() {
+                            let (state, mut stack) = epsilonstates.pop_front().unwrap();
+                            if let Some(nexts) = self.states.get(&state).and_then(|s| {
+                                stack.pop().and_then(|stack_char| s.get(&(' ', stack_char)))
+                            }) {
+                                for next in nexts.iter() {
+                                    let mut stack = stack.clone();
+                                    stack.append(&mut next.1.clone());
+                                    if !epsilonstates.contains(&(next.0, stack.clone())) {
+                                        found_new = true;
+                                        epsilonstates.push_back((next.0, stack));
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    for next in epsilonstates.iter() {
+                        let mut stack = stack.clone();
+                        stack.append(&mut next.1.clone());
+                        if !new.contains(&(next.0, stack.clone())) {
+                            new.push((next.0, stack));
+                        }
+                    }
+                }
+            }
+            new.sort_unstable();
+            new.dedup();
+            currents = new;
+        }
         currents
             .iter()
             .any(|(state, stack)| stack.is_empty() && self.final_states.contains(state))
-    }
-
-    fn next_states(
-        &self,
-        state: &VertexId,
-        symbol: Symbol,
-        stack_char: StackChar,
-    ) -> Vec<(VertexId, Vec<StackChar>)> {
-        if let Some(nexts) = self
-            .states
-            .get(state)
-            .and_then(|nexts| nexts.get(&(symbol, stack_char)))
-        {
-            nexts.to_vec()
-        } else {
-            Vec::new()
-        }
     }
 
     pub fn view(&self) {
@@ -105,7 +111,7 @@ impl PDA {
         let mut start_states = HashSet::new();
         data.into_iter().for_each(|d| match d {
             AutomatonData::Edge(source, target, label) => {
-                info!("{label}");
+                // info!("{label}");
                 let mut values = label.split(",");
                 let label = parse_next(&mut values, "No Character given");
                 let current_stack = parse_next(&mut values, "No Current Stackvalue given");
