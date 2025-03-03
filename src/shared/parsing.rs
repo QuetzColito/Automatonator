@@ -36,10 +36,13 @@ fn parse_text(file: String) -> Vec<AutomatonData> {
             let mut values = line.split_whitespace();
             if let Some(value) = values.next() {
                 match value {
+                    // Ignore Comments
                     "c" | "t" => None,
+                    // Start State
                     "s" => Some(AutomatonData::Start(
                         idgen.get(values.next().expect("missing start state identifier")),
                     )),
+                    // Final State
                     "f" => Some(AutomatonData::Final(
                         idgen.get(values.next().expect("missing final state identifier")),
                     )),
@@ -161,11 +164,10 @@ fn parse_xml(file: String) -> Vec<AutomatonData> {
 // Panics if a label doesnt have a parent
 // Returns None if it cant find a label
 fn find_related_label<'a>(id: &'a str, labels: &'a Vec<Node<'_, '_>>) -> Option<&'a str> {
-    // info!("{}", id);
     labels
         .iter()
         .find(|label| label.attribute("parent").expect("label without parent") == id)
-        .and_then(|label| Some(label.attribute("value").expect("label without value")))
+        .map(|label| label.attribute("value").expect("label without value"))
 }
 
 // Helper function to check if the style of a Node contains a str
