@@ -156,7 +156,7 @@ fn parse_xml(file: String) -> Vec<AutomatonData> {
 // Looks for a label which parent is the given id of an Edge
 // Panics if a label doesnt have a parent or it cant find a label
 fn find_related_label<'a>(id: &'a str, labels: &'a Vec<Node<'_, '_>>) -> &'a str {
-    info!("{}", id);
+    // info!("{}", id);
     labels
         .iter()
         .find(|label| label.attribute("parent").expect("label without parent") == id)
@@ -201,7 +201,7 @@ impl IdGenerator {
             *id
         } else {
             self.id += 1;
-            info!("{} gets mapped to {}", id_str, self.id);
+            // info!("{} gets mapped to {}", id_str, self.id);
             self.id_map.insert(id_str.to_owned(), self.id);
             self.id
         }
