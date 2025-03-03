@@ -1,6 +1,6 @@
 use std::{collections::HashMap, fs, vec};
 
-use log::info;
+use log::{info, warn};
 use roxmltree::Node;
 
 use crate::automatons::{dfa::DFA, nfa::NFA, pda::PDA};
@@ -97,12 +97,16 @@ fn parse_xml(file: String) -> Vec<AutomatonData> {
                 assert!(node.has_attribute("edge"));
                 if node.has_attribute("source") && node.has_attribute("target") {
                     let id = node.attribute("id").expect("label without id");
-                    let mut label = node
-                        .attribute("value") // check if edge has label as value
-                        .unwrap_or_else(|| find_related_label(id, &labels)); // else try to find a label
+                    // check if edge has label as value
+                    let mut label = node.attribute("value").unwrap_or("");
                     if label.is_empty() {
-                        // make sure label didnt have an empty value
-                        label = find_related_label(id, &labels)
+                        // make sure label didnt have an empty value or was not present
+                        if let Some(ulabel) = find_related_label(id, &labels) {
+                            label = ulabel;
+                        } else {
+                            warn!("Ignoring Edge Without Label");
+                            return vec![];
+                        }
                     }
                     sanitize_label(label) // might split label up into multiple lines
                         .into_iter()
@@ -145,7 +149,7 @@ fn parse_xml(file: String) -> Vec<AutomatonData> {
                         ),
                     )]
                 } else {
-                    info!("Ignoring free floating edge");
+                    warn!("Ignoring free floating edge");
                     Vec::new()
                 }
             }
@@ -154,15 +158,14 @@ fn parse_xml(file: String) -> Vec<AutomatonData> {
 }
 
 // Looks for a label which parent is the given id of an Edge
-// Panics if a label doesnt have a parent or it cant find a label
-fn find_related_label<'a>(id: &'a str, labels: &'a Vec<Node<'_, '_>>) -> &'a str {
+// Panics if a label doesnt have a parent
+// Returns None if it cant find a label
+fn find_related_label<'a>(id: &'a str, labels: &'a Vec<Node<'_, '_>>) -> Option<&'a str> {
     // info!("{}", id);
     labels
         .iter()
         .find(|label| label.attribute("parent").expect("label without parent") == id)
-        .expect("edge without label")
-        .attribute("value")
-        .expect("label without value")
+        .and_then(|label| Some(label.attribute("value").expect("label without value")))
 }
 
 // Helper function to check if the style of a Node contains a str

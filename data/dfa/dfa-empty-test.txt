@@ -1,0 +1,10 @@
+t DFA
+c an automaton
+c which excepts an empty word
+t also testing comments c:
+s 1
+f 3
+f 1
+1 2 u
+2 3 w
+3 3 u
