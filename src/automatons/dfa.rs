@@ -12,7 +12,7 @@ use crate::shared::utils::logcheck_w;
 pub struct DFA {
     states: HashMap<VertexId, HashMap<char, VertexId>>,
     alphabet: Vec<char>,
-    final_states: HashSet<VertexId>,
+    final_states: Vec<VertexId>,
     start_state: VertexId,
 }
 
@@ -81,7 +81,7 @@ impl DFA {
         DFA {
             states,
             alphabet: alphabet.into_iter().collect(),
-            final_states,
+            final_states: final_states.into_iter().collect(),
             start_state,
         }
     }

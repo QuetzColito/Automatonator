@@ -15,8 +15,8 @@ type Transitions = HashMap<(Symbol, StackChar), Destinations>;
 pub struct PDA {
     states: HashMap<VertexId, Transitions>,
     alphabet: Vec<char>,
-    final_states: HashSet<VertexId>,
-    start_states: HashSet<VertexId>,
+    final_states: Vec<VertexId>,
+    start_states: Vec<VertexId>,
 }
 
 impl PDA {
@@ -129,8 +129,8 @@ impl PDA {
         PDA {
             states,
             alphabet: alphabet.into_iter().collect(),
-            final_states,
-            start_states,
+            final_states: final_states.into_iter().collect(),
+            start_states: start_states.into_iter().collect(),
         }
     }
 

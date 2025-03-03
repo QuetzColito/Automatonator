@@ -2,36 +2,33 @@ use crate::shared::automaton::*;
 use crate::shared::utils::*;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::collections::VecDeque;
 
 #[allow(clippy::upper_case_acronyms)]
 pub struct NFA {
-    states: HashMap<VertexId, HashMap<char, HashSet<VertexId>>>,
+    states: HashMap<VertexId, HashMap<char, Vec<VertexId>>>,
     alphabet: Vec<char>,
-    final_states: HashSet<VertexId>,
-    start_states: HashSet<VertexId>,
+    final_states: Vec<VertexId>,
+    start_states: Vec<VertexId>,
 }
 
 impl NFA {
     pub fn accepts(&self, word: &str) -> bool {
-        let mut currents = self.start_states.clone();
-        word.chars().for_each(|symbol: char| {
-            currents = currents
-                .iter()
-                .flat_map(|current| {
-                    if let Some(next) = self
-                        .states
-                        .get(current)
-                        .expect("tried to access non-existant state")
-                        .get(&symbol)
-                    {
-                        next.clone()
-                    } else {
-                        HashSet::new()
+        let mut currents: VecDeque<_> = self.start_states.iter().collect();
+        for symbol in word.chars() {
+            for _ in 0..currents.len() {
+                if let Some(next) = self
+                    .states
+                    .get(currents.pop_front().unwrap())
+                    .and_then(|s| s.get(&symbol))
+                {
+                    for s in next.iter() {
+                        currents.push_back(s);
                     }
-                })
-                .collect()
-        });
-        self.final_states.iter().any(|f| currents.contains(f))
+                }
+            }
+        }
+        self.final_states.iter().any(|f| currents.contains(&f))
     }
 
     pub fn view(&self) {
@@ -60,8 +57,8 @@ impl NFA {
                     .entry(source)
                     .or_insert(HashMap::new())
                     .entry(label)
-                    .or_insert(HashSet::new())
-                    .insert(target);
+                    .or_insert(Vec::new())
+                    .push(target);
             }
             AutomatonData::Final(id) => {
                 final_states.insert(id);
@@ -74,8 +71,8 @@ impl NFA {
         NFA {
             states,
             alphabet: alphabet.into_iter().collect(),
-            final_states,
-            start_states,
+            final_states: final_states.into_iter().collect(),
+            start_states: start_states.into_iter().collect(),
         }
     }
 
