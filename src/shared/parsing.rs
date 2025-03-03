@@ -13,7 +13,7 @@ pub fn parse_automaton(filepath: &str, automaton_type: &Option<String>) -> Autom
     let automaton_type = determine_automaton_type(
         &automaton_type
             .clone()
-            .unwrap_or(path_to_automaton_type(filepath)),
+            .unwrap_or_else(|| path_to_automaton_type(filepath)),
     );
 
     let automaton_data = if filepath.ends_with(".xml") || filepath.ends_with(".drawio") {
