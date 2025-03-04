@@ -31,23 +31,26 @@ impl DFA {
     }
 
     pub fn view(&self) {
-        info!("Type: DFA");
-        info!(
-            "Final States: {}",
+        let mut out = String::new();
+        out.push_str("Type: DFA");
+        out.push_str(&format!(
+            "\nFinal States: {}",
             self.final_states
                 .iter()
                 .map(|id| id.to_string())
                 .reduce(|acc, id| format!("{acc}, {id}"))
                 .expect("Automaton should have at least 1 final state")
-        );
-        info!("Start State: {}", &self.start_state);
+        ));
+        out.push_str(&format!("\nStart State: {}", &self.start_state));
         let mut states: Vec<_> = self.states.iter().collect();
         states.sort_by_key(|&(key, _)| key);
         states.iter().for_each(|(id, map)| {
-            info!("State {}:", id);
-            map.iter()
-                .for_each(|(label, target)| info!("    {} -> {}", &label.to_string(), target))
-        })
+            out.push_str(&format!("\nState {}:", id));
+            map.iter().for_each(|(label, target)| {
+                out.push_str(&format!("\n    {} -> {}", &label.to_string(), target))
+            })
+        });
+        info!("{}", out);
     }
     pub fn new(data: Vec<AutomatonData>) -> DFA {
         let mut states = HashMap::new();

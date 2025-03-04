@@ -89,22 +89,30 @@ impl PDA {
     }
 
     pub fn view(&self) {
-        println!("Type: PDA");
-        println!("Final States: {}", format_states(&self.final_states));
-        println!("Start States: {}", format_states(&self.start_states));
+        let mut out = String::new();
+        out.push_str("Type: PDA");
+        out.push_str(&format!(
+            "\nFinal States: {}",
+            format_states(&self.final_states)
+        ));
+        out.push_str(&format!(
+            "\nStart States: {}",
+            format_states(&self.start_states)
+        ));
         let mut states: Vec<_> = self.states.iter().collect();
         states.sort_by_key(|&(key, _)| key);
         states.iter().for_each(|(id, map)| {
-            println!("State {}:", id);
+            out.push_str(&format!("\nState {}:", id));
             map.iter().for_each(|(label, target)| {
-                println!(
-                    "    {} {} -> {}",
+                out.push_str(&format!(
+                    "\n    {} {} -> {}",
                     &label.0.to_string(),
                     &label.1.to_string(),
                     &format_states_pda(target),
-                )
+                ))
             });
-        })
+        });
+        info!("{}", out);
     }
     pub fn new(data: Vec<AutomatonData>) -> PDA {
         let mut states = HashMap::new();

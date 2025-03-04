@@ -1,3 +1,6 @@
+use log::info;
+use log::warn;
+
 use crate::shared::automaton::*;
 use crate::shared::utils::*;
 use std::collections::HashMap;
@@ -29,17 +32,29 @@ impl NFA {
     }
 
     pub fn view(&self) {
-        println!("Type: NFA");
-        println!("Final States: {}", format_states(&self.final_states));
-        println!("Start States: {}", format_states(&self.start_states));
+        let mut out = String::new();
+        out.push_str("Type: NFA");
+        out.push_str(&format!(
+            "\nFinal States: {}",
+            format_states(&self.final_states)
+        ));
+        out.push_str(&format!(
+            "\nStart States: {}",
+            format_states(&self.start_states)
+        ));
         let mut states: Vec<_> = self.states.iter().collect();
         states.sort_by_key(|&(key, _)| key);
         states.iter().for_each(|(id, map)| {
-            println!("State {}:", id);
+            out.push_str(&format!("\nState {}:", id));
             map.iter().for_each(|(label, target)| {
-                println!("    {} -> {}", &label.to_string(), &format_states(target))
+                out.push_str(&format!(
+                    "\n    {} -> {}",
+                    &label.to_string(),
+                    &format_states(target)
+                ))
             })
-        })
+        });
+        info!("{}", out);
     }
     pub fn new(data: Vec<AutomatonData>) -> NFA {
         let mut states = HashMap::new();
