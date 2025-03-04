@@ -25,3 +25,10 @@ fn test_compare(filepath: &str, filepath2: &str, equivalent: bool) {
     let a2 = parse_automaton(filepath2, &None);
     assert!(generated_comparison(&a1, &a2) == if equivalent { 1 } else { 0 },);
 }
+
+#[cfg(test)]
+fn view_test(filepaths: &[&str]) {
+    for filepath in filepaths {
+        parse_automaton(filepath, &None).view();
+    }
+}

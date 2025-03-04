@@ -1,7 +1,7 @@
 use crate::shared::parsing::*;
 use crate::tests::test_compare;
 
-use super::test_against;
+use super::{test_against, view_test};
 
 #[test]
 fn parse_text() {
@@ -12,6 +12,11 @@ fn parse_text() {
 fn parse_xml() {
     parse_automaton("data/pda/pda.drawio.xml", &None);
     parse_automaton("data/pda/pdacompli.drawio.xml", &None);
+}
+
+#[test]
+fn view() {
+    view_test(&["data/pda/pda.drawio.xml", "data/pda/pdacompli.drawio.xml"]);
 }
 
 #[test]

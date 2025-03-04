@@ -1,7 +1,7 @@
 use crate::shared::parsing::*;
 use crate::tests::test_compare;
 
-use super::test_against;
+use super::{test_against, view_test};
 
 #[test]
 fn parse_text() {
@@ -13,6 +13,15 @@ fn parse_xml() {
     parse_automaton("data/nfa/equivNFA.drawio", &None);
     parse_automaton("data/nfa/equivNFA1.drawio.xml", &None);
     parse_automaton("data/nfa/equivNFA2.drawio.xml", &None);
+}
+
+#[test]
+fn view() {
+    view_test(&[
+        "data/nfa/equivNFA.drawio",
+        "data/nfa/equivNFA1.drawio.xml",
+        "data/nfa/equivNFA2.drawio.xml",
+    ]);
 }
 
 #[test]

@@ -7,7 +7,7 @@ pub fn format_states(states: &[VertexId]) -> String {
         .iter()
         .map(|id| id.to_string())
         .reduce(|acc, id| format!("{acc}, {id}"))
-        .unwrap()
+        .unwrap_or("None".to_string())
 }
 
 pub fn logcheck_w(value: bool, logtext: &str) {

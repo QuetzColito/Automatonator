@@ -1,12 +1,24 @@
 use crate::shared::parsing::*;
 use crate::tests::test_compare;
 
-use super::test_against;
+use super::{test_against, view_test};
 
 #[test]
 fn parse_text() {
     parse_automaton("data/dfa/is-uneven-dfa.gr", &None);
     parse_automaton("data/dfa/dfa-empty-test.txt", &None);
+}
+
+#[test]
+fn view() {
+    view_test(&[
+        "data/dfa/is-uneven-dfa.gr",
+        "data/dfa/is-uneven-dfa.xml",
+        "data/dfa/is-uneven-capped.drawio.xml",
+        "data/dfa/carousel.drawio",
+        "data/dfa/importantdfa.drawio.xml",
+        "data/dfa/dfa-empty-test.txt",
+    ]);
 }
 
 #[test]
