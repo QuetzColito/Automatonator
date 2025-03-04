@@ -48,7 +48,10 @@ impl NFA {
         let mut start_states = HashSet::new();
         data.into_iter().for_each(|d| match d {
             AutomatonData::Edge(source, target, label) => {
-                let label = label.parse::<char>().unwrap_or('e');
+                let label = label.parse::<char>().unwrap_or_else(|_| {
+                    warn!("Parsing '{}' as epsilon, but epsilon transitions are not allowed in nfa, so will be ignored", label);
+                    ' '
+                });
                 alphabet.insert(label);
                 states
                     .entry(source)

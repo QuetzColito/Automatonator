@@ -1,3 +1,5 @@
+use log::info;
+
 use crate::shared::automaton::*;
 use crate::shared::utils::format_states;
 use std::collections::HashMap;
@@ -146,7 +148,11 @@ impl PDA {
 }
 
 fn parse_next(values: &mut Split<'_, &str>, error: &str) -> char {
-    values.next().expect(error).trim().parse().unwrap_or(' ')
+    let label = values.next().expect(error).trim();
+    label.parse().unwrap_or_else(|_| {
+        info!("Parsing '{}' as epsilon", label);
+        ' '
+    })
 }
 
 fn format_states_pda(states: &[(VertexId, Vec<char>)]) -> String {
