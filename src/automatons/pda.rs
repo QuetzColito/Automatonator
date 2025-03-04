@@ -83,9 +83,14 @@ impl PDA {
             new.dedup();
             currents = new;
         }
-        currents
-            .iter()
-            .any(|(state, stack)| stack.is_empty() && self.final_states.contains(state))
+
+        if self.final_states.is_empty() {
+            currents.iter().any(|(_, stack)| stack.is_empty())
+        } else {
+            currents
+                .iter()
+                .any(|(state, _)| self.final_states.contains(state))
+        }
     }
 
     pub fn view(&self) {
