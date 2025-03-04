@@ -5,7 +5,7 @@
 Download the provided binary and run (dont forget to make it executable):
 
 ```
-Automatonator -h
+automatonator -h
 ```
 
 If there isnt a binary provided for your System refer to [Building](#building)
