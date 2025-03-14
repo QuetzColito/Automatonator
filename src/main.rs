@@ -4,6 +4,10 @@ pub mod shared;
 pub mod tests;
 
 use log::*;
+use rand::Rng;
+use rand::SeedableRng;
+use rand_chacha::ChaCha8Rng;
+use shared::automaton::Automaton;
 use std::fs;
 
 use args::Args;
@@ -12,53 +16,114 @@ use shared::evaluation::*;
 use shared::parsing::*;
 use std::time::Instant;
 
-fn main() {
-    let now = Instant::now();
-    let args = Args::parse();
+struct One {
+    automaton: Automaton,
+}
 
-    colog::init();
+struct Two {
+    a1: Automaton,
+    a2: Automaton,
+}
 
-    info!("Reading Automaton from {}", &args.automaton);
+struct State<Automatons> {
+    state: Automatons,
+}
 
-    let automat = parse_automaton(&args.automaton, &args.automaton_type);
-    info!("Successfully read Automaton:");
-    automat.view();
+impl<A> State<A> {
+    fn new(path: &str, atype: Option<String>) -> State<One> {
+        info!("Reading Automaton from {}", path);
 
-    // Compare to Reference Automaton (if given)
-    if let Some(filepath2) = args.automaton2 {
-        let automat2 = parse_automaton(
-            &filepath2,
-            if args.ref_automaton_type.is_some() {
-                &args.ref_automaton_type
+        let automaton = parse_automaton(path, atype).expect("Could not read first Automaton");
+
+        info!("Successfully read Automaton:");
+        automaton.view();
+
+        State {
+            state: One { automaton },
+        }
+    }
+}
+
+impl State<One> {
+    fn add(
+        self,
+        path: Option<String>,
+        atype1: Option<String>,
+        atype2: Option<String>,
+    ) -> Option<State<Two>> {
+        if let Some(path) = path {
+            info!("Reading Second Automaton from {}", path);
+
+            if let Some(a2) = parse_automaton(&path, if atype2.is_some() { atype2 } else { atype1 })
+            {
+                info!("Successfully read Second Automaton:");
+                a2.view();
+
+                Some(State {
+                    state: Two {
+                        a1: self.state.automaton,
+                        a2,
+                    },
+                })
             } else {
-                &args.automaton_type
-            },
-        );
+                warn!("Could not read Second Automaton, Skipping.");
+                None
+            }
+        } else {
+            None
+        }
+    }
 
-        info!("Successfully read second Automaton:");
-        automat2.view();
+    fn cases(&self, cases: Option<String>) -> &State<One> {
+        // Test if Testcase File is given
+        if let Some(cases) = cases.and_then(|path| fs::read_to_string(path).ok()) {
+            info!("Evaluating Test Cases:");
+            fixed_test(&self.state.automaton, &cases);
+        }
+        self
+    }
+}
 
+impl State<Two> {
+    fn evaluate(&self, eval_file: Option<String>) -> &State<Two> {
+        info!("Comparing Automatons");
         // Evaluate if evaluation_file given
-        if let Some(evaluation_file) = args.evaluation_file {
-            let cases = fs::read_to_string(&evaluation_file).expect("file doesn't exist");
+        if let Some(evaluation_file) = eval_file {
+            let cases =
+                fs::read_to_string(&evaluation_file).expect("evaluation file doesn't exist");
 
             println!(
-                "Automatons answered the same on {}% of",
-                full_comparison(&automat, &automat2, &cases)
+                "Automaton reached {}% Points",
+                full_comparison(&self.state.a1, &self.state.a2, &cases)
             );
-        } else if generated_comparison(&automat, &automat2) == 1 {
+        } else if generated_comparison(&self.state.a1, &self.state.a2) == 1 {
             info!("passed generated comparison")
         } else {
             warn!("did not pass generated comparison")
         }
+        self
     }
+}
 
-    // Compare to Test Cases (if given)
-    if let Some(testcase_filepath) = args.testcase_file {
-        let cases = fs::read_to_string(&testcase_filepath).expect("file doesn't exist");
-        fixed_test(&automat, &cases);
+fn main() {
+    let now = Instant::now();
+    let args = Args::parse();
+    colog::init();
+
+    // Read Single Automaton
+    let state = State::<One>::new(&args.automaton, args.automaton_type.clone());
+    // Test Test Cases if given
+    state.cases(args.testcase_file);
+
+    // Compare to Reference Automaton (if given)
+    if let Some(state) = state.add(
+        args.automaton2,
+        args.automaton_type,
+        args.ref_automaton_type,
+    ) {
+        state.evaluate(args.evaluation_file);
     }
 
     let elapsed = now.elapsed();
-    println!("Took: {:.2?}", elapsed);
+    info!("Took: {:.2?}", elapsed);
 }

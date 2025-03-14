@@ -5,8 +5,8 @@ use super::{test_against, view_test};
 
 #[test]
 fn parse_text() {
-    parse_automaton("data/dfa/is-uneven-dfa.gr", &None);
-    parse_automaton("data/dfa/dfa-empty-test.txt", &None);
+    parse_automaton("data/dfa/is-uneven-dfa.gr", None).unwrap();
+    parse_automaton("data/dfa/dfa-empty-test.txt", None).unwrap();
 }
 
 #[test]
@@ -23,10 +23,10 @@ fn view() {
 
 #[test]
 fn parse_xml() {
-    parse_automaton("data/dfa/is-uneven-dfa.xml", &None);
-    parse_automaton("data/dfa/importantdfa.drawio.xml", &None);
-    parse_automaton("data/dfa/is-uneven-capped.drawio.xml", &None);
-    parse_automaton("data/dfa/carousel.drawio", &None);
+    parse_automaton("data/dfa/is-uneven-dfa.xml", None).unwrap();
+    parse_automaton("data/dfa/importantdfa.drawio.xml", None).unwrap();
+    parse_automaton("data/dfa/is-uneven-capped.drawio.xml", None).unwrap();
+    parse_automaton("data/dfa/carousel.drawio", None).unwrap();
 }
 
 #[test]

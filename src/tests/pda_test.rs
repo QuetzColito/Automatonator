@@ -10,8 +10,8 @@ fn parse_text() {
 
 #[test]
 fn parse_xml() {
-    parse_automaton("data/pda/pda.drawio.xml", &None);
-    parse_automaton("data/pda/pdacompli.drawio.xml", &None);
+    parse_automaton("data/pda/pda.drawio.xml", None).unwrap();
+    parse_automaton("data/pda/pdacompli.drawio.xml", None).unwrap();
 }
 
 #[test]

@@ -1,4 +1,4 @@
-use log::warn;
+use log::{info, warn};
 use rand::prelude::*;
 use rand_chacha::ChaCha8Rng;
 
@@ -50,17 +50,19 @@ pub fn fixed_comparison(
 }
 
 pub fn generated_comparison(automaton1: &Automaton, automaton2: &Automaton) -> u64 {
-    let alphabet = automaton1.alphabet();
-    let passed_generated = (0..10).all(|l| {
+    let alphabet = automaton2.alphabet();
+    info!("Start comparing against all possible short words");
+    let passed_generated = (0..8).all(|l| {
         (0..alphabet.len().pow(l)).all(|seed| {
             let word = make_word(seed as u64, l as usize, alphabet);
             let agree = automaton1.accepts(&word) == automaton2.accepts(&word);
             if !agree {
-                warn!("did not agree on '{}'", &word)
+                warn!("did not agree on generated word '{}'", &word)
             };
             agree
         })
     });
+    info!("Start comparing against a random set of longer words");
     let mut rng = ChaCha8Rng::seed_from_u64(42);
     let passed_rng = (0..100000).all(|_| {
         let len = rng.gen_range(0..25);
@@ -68,7 +70,7 @@ pub fn generated_comparison(automaton1: &Automaton, automaton2: &Automaton) -> u
         let word = make_word(seed, len as usize, alphabet);
         let agree = automaton1.accepts(&word) == automaton2.accepts(&word);
         if !agree {
-            warn!("did not agree on '{}'", &word)
+            warn!("did not agree on random word '{}'", &word)
         };
         agree
     });
@@ -88,7 +90,7 @@ pub fn full_comparison(automaton1: &Automaton, automaton2: &Automaton, wordlist:
 pub fn make_word(seed: u64, min_length: usize, alphabet: &[char]) -> String {
     let mut seed = seed;
     let s = alphabet.len() as u64;
-    let mut out = String::new();
+    let mut out = String::with_capacity(min_length);
 
     while seed >= s {
         let digit = seed % s;
@@ -102,4 +104,10 @@ pub fn make_word(seed: u64, min_length: usize, alphabet: &[char]) -> String {
     }
 
     out
+}
+
+#[test]
+fn test_wordgen() {
+    let a = ['a', 'b', 'c'];
+    assert_eq!(make_word(25, 3, &a), "bcc");
 }

@@ -7,25 +7,25 @@ use crate::automatons::{dfa::DFA, nfa::NFA, pda::PDA};
 
 use super::automaton::*;
 
-pub fn parse_automaton(filepath: &str, automaton_type: &Option<String>) -> Automaton {
-    let file =
-        fs::read_to_string(filepath).unwrap_or_else(|_| panic!("file {} doesnt exist", &filepath));
-    let automaton_type = determine_automaton_type(
-        &automaton_type
-            .clone()
-            .unwrap_or_else(|| path_to_automaton_type(filepath)),
-    );
+pub fn parse_automaton(filepath: &str, automaton_type: Option<String>) -> Option<Automaton> {
+    if let Some(file) = fs::read_to_string(filepath).ok() {
+        let automaton_type = determine_automaton_type(
+            &automaton_type.unwrap_or_else(|| path_to_automaton_type(filepath)),
+        );
 
-    let automaton_data = if filepath.ends_with(".xml") || filepath.ends_with(".drawio") {
-        parse_xml(file)
+        let automaton_data = if filepath.ends_with(".xml") || filepath.ends_with(".drawio") {
+            parse_xml(file)
+        } else {
+            parse_text(file)
+        };
+
+        Some(match automaton_type {
+            AutomatonType::DFA => Automaton::DFA(DFA::new(automaton_data)),
+            AutomatonType::NFA => Automaton::NFA(NFA::new(automaton_data)),
+            AutomatonType::PDA => Automaton::PDA(PDA::new(automaton_data)),
+        })
     } else {
-        parse_text(file)
-    };
-
-    match automaton_type {
-        AutomatonType::DFA => Automaton::DFA(DFA::new(automaton_data)),
-        AutomatonType::NFA => Automaton::NFA(NFA::new(automaton_data)),
-        AutomatonType::PDA => Automaton::PDA(PDA::new(automaton_data)),
+        None
     }
 }
 

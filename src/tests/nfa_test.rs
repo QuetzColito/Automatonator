@@ -10,9 +10,9 @@ fn parse_text() {
 
 #[test]
 fn parse_xml() {
-    parse_automaton("data/nfa/equivNFA.drawio", &None);
-    parse_automaton("data/nfa/equivNFA1.drawio.xml", &None);
-    parse_automaton("data/nfa/equivNFA2.drawio.xml", &None);
+    parse_automaton("data/nfa/equivNFA.drawio", None).unwrap();
+    parse_automaton("data/nfa/equivNFA1.drawio.xml", None).unwrap();
+    parse_automaton("data/nfa/equivNFA2.drawio.xml", None).unwrap();
 }
 
 #[test]

@@ -11,8 +11,11 @@ pub mod nfa_test;
 pub mod pda_test;
 
 #[cfg(test)]
+pub mod generation_test;
+
+#[cfg(test)]
 fn test_against(filepath: &str, accept: &[&str], reject: &[&str]) {
-    let a = parse_automaton(filepath, &None);
+    let a = parse_automaton(filepath, None).expect("testdata missing");
 
     accept.iter().for_each(|word| assert!(a.accepts(word)));
 
@@ -21,14 +24,16 @@ fn test_against(filepath: &str, accept: &[&str], reject: &[&str]) {
 
 #[cfg(test)]
 fn test_compare(filepath: &str, filepath2: &str, equivalent: bool) {
-    let a1 = parse_automaton(filepath, &None);
-    let a2 = parse_automaton(filepath2, &None);
+    let a1 = parse_automaton(filepath, None).expect("testdata missing");
+    let a2 = parse_automaton(filepath2, None).expect("testdata missing");
     assert!(generated_comparison(&a1, &a2) == if equivalent { 1 } else { 0 },);
 }
 
 #[cfg(test)]
 fn view_test(filepaths: &[&str]) {
     for filepath in filepaths {
-        parse_automaton(filepath, &None).view();
+        parse_automaton(filepath, None)
+            .expect("testdata missing")
+            .view();
     }
 }
