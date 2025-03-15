@@ -2,6 +2,8 @@ use crate::automatons::{dfa::DFA, nfa::NFA, pda::PDA};
 
 // The Place with all the Boilerplate
 
+// AutomatonData
+
 pub type VertexId = u32;
 
 pub enum AutomatonData {
@@ -10,12 +12,7 @@ pub enum AutomatonData {
     Start(VertexId),
 }
 
-#[allow(clippy::upper_case_acronyms)]
-pub enum Automaton {
-    DFA(DFA),
-    NFA(NFA),
-    PDA(PDA),
-}
+// AutomatonType
 
 #[allow(clippy::upper_case_acronyms)]
 pub enum AutomatonType {
@@ -41,28 +38,31 @@ pub fn path_to_automaton_type(filepath: &str) -> String {
         .to_string()
 }
 
-impl Automaton {
-    pub fn accepts(&self, word: &str) -> bool {
-        match self {
-            Automaton::DFA(dfa) => dfa.accepts(word),
-            Automaton::NFA(nfa) => nfa.accepts(word),
-            Automaton::PDA(pda) => pda.accepts(word),
-        }
-    }
+// The Automaton Interface Enum
 
-    pub fn alphabet(&self) -> &Vec<char> {
-        match self {
-            Automaton::DFA(dfa) => dfa.alphabet(),
-            Automaton::NFA(nfa) => nfa.alphabet(),
-            Automaton::PDA(pda) => pda.alphabet(),
-        }
-    }
+// Macro to generate the Implementation
 
-    pub fn view(&self) {
-        match self {
-            Automaton::DFA(dfa) => dfa.view(),
-            Automaton::NFA(nfa) => nfa.view(),
-            Automaton::PDA(pda) => pda.view(),
+macro_rules! gen_impl {
+    ($enum:ident, $function:ident, $return:ty, $($arg:ident; $atype:ty),*) => {
+        impl $enum {
+            pub fn $function(&self, $($arg: $atype),*) -> $return {
+                match self {
+                    $enum::DFA(a) => a.$function($($arg),*),
+                    $enum::NFA(a) => a.$function($($arg),*),
+                    $enum::PDA(a) => a.$function($($arg),*),
+                }
+            }
         }
-    }
+    };
 }
+
+#[allow(clippy::upper_case_acronyms)]
+pub enum Automaton {
+    DFA(DFA),
+    NFA(NFA),
+    PDA(PDA),
+}
+
+gen_impl!(Automaton, accepts, bool, word; &str);
+gen_impl!(Automaton, alphabet, &Vec<char>,);
+gen_impl!(Automaton, view, (),);
