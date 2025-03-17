@@ -7,6 +7,7 @@ use std::collections::HashSet;
 use crate::shared::automaton::*;
 use crate::shared::utils::logcheck_e;
 use crate::shared::utils::logcheck_w;
+use crate::shared::utils::parse_char;
 
 #[allow(clippy::upper_case_acronyms)]
 pub struct DFA {
@@ -59,10 +60,7 @@ impl DFA {
         let mut start_state = 0;
         data.into_iter().for_each(|d| match d {
             AutomatonData::Edge(source, target, label) => {
-                let label = label.parse::<char>().unwrap_or_else(|_| {
-                    warn!("Parsing '{}' as epsilon, but epsilon transitions are not allowed in dfa, so will be ignored", label);
-                    ' '
-                });
+                let label = parse_char(&label);
                 alphabet.insert(label);
                 states
                     .entry(source)

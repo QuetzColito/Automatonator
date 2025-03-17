@@ -4,9 +4,6 @@ pub mod shared;
 pub mod tests;
 
 use log::*;
-use rand::Rng;
-use rand::SeedableRng;
-use rand_chacha::ChaCha8Rng;
 use shared::automaton::Automaton;
 use std::fs;
 
