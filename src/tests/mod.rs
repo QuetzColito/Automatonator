@@ -11,9 +11,6 @@ pub mod nfa_test;
 pub mod pda_test;
 
 #[cfg(test)]
-pub mod generation_test;
-
-#[cfg(test)]
 fn test_against(filepath: &str, accept: &[&str], reject: &[&str]) {
     let a = parse_automaton(filepath, None).expect("testdata missing");
 

@@ -5,8 +5,6 @@ use crate::shared::utils::format_states;
 use crate::shared::utils::parse_char;
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::collections::VecDeque;
-use std::str::Split;
 
 type Symbol = char;
 type StackChar = char;
@@ -31,57 +29,38 @@ impl PDA {
             .collect();
         for symbol in word.chars() {
             let mut new = Vec::new();
-            for current in currents.into_iter() {
+            let mut seen_states = currents.clone();
+            while let Some(current) = currents.pop() {
                 let state = current.0;
                 let mut stack = current.1;
                 let stack_char = stack.pop();
-                if let Some(nexts) = self
-                    .states
-                    .get(&state)
-                    .and_then(|s| stack_char.and_then(|stack_char| s.get(&(symbol, stack_char))))
-                {
-                    for next in nexts.iter() {
-                        let mut stack = stack.clone();
-                        stack.push_str(&next.1);
-                        if !new.contains(&(next.0, stack.clone())) {
-                            new.push((next.0, stack));
+                let read_char = |c| {
+                    self.states
+                        .get(&state)
+                        .and_then(|s| stack_char.and_then(|stack_char| s.get(&(c, stack_char))))
+                };
+                // epsilon transitions
+                if let Some(nexts) = read_char(' ') {
+                    for next in nexts.clone().into_iter() {
+                        let mut next = next;
+                        next.1 = stack.clone() + &next.1;
+                        if !seen_states.contains(&next) {
+                            seen_states.push(next.clone());
+                            currents.push(next);
                         }
                     }
-
-                    let mut epsilonstates = VecDeque::new();
-                    epsilonstates.push_back((state, stack.clone()));
-
-                    let mut found_new = true;
-                    while found_new {
-                        found_new = false;
-                        for _ in 0..epsilonstates.len() {
-                            let (state, mut stack) = epsilonstates.pop_front().unwrap();
-                            if let Some(nexts) = self.states.get(&state).and_then(|s| {
-                                stack.pop().and_then(|stack_char| s.get(&(' ', stack_char)))
-                            }) {
-                                for next in nexts.iter() {
-                                    let mut stack = stack.clone();
-                                    stack.push_str(&next.1);
-                                    if !epsilonstates.contains(&(next.0, stack.clone())) {
-                                        found_new = true;
-                                        epsilonstates.push_back((next.0, stack));
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    for next in epsilonstates.iter() {
-                        let mut stack = stack.clone();
-                        stack.push_str(&mut next.1.clone());
-                        if !new.contains(&(next.0, stack.clone())) {
-                            new.push((next.0, stack));
+                }
+                // non-epsilon transitions
+                if let Some(nexts) = read_char(symbol) {
+                    for next in nexts.clone().into_iter() {
+                        let mut next = next;
+                        next.1 = stack.clone() + &next.1;
+                        if !new.contains(&next) {
+                            new.push(next);
                         }
                     }
                 }
             }
-            new.sort_unstable();
-            new.dedup();
             currents = new;
         }
 
@@ -128,7 +107,7 @@ impl PDA {
         data.into_iter().for_each(|d| match d {
             AutomatonData::Edge(source, target, label) => {
                 let values: Vec<_> = label.split(",").collect();
-                let label = parse_char(values.get(0).expect("No Character given"));
+                let label = parse_char(values.first().expect("No Character given"));
                 let current_stack = parse_char(values.get(1).expect("No Current Stackvalue given"));
                 let next_stack = values.get(2).expect("No Next Stackvalue given");
                 alphabet.insert(label);
@@ -158,14 +137,6 @@ impl PDA {
     pub fn alphabet(&self) -> &Vec<char> {
         &self.alphabet
     }
-}
-
-fn parse_next(values: &mut Split<'_, &str>, error: &str) -> char {
-    let label = values.next().expect(error).trim();
-    label.parse().unwrap_or_else(|_| {
-        info!("Parsing '{}' as epsilon", label);
-        ' '
-    })
 }
 
 fn format_states_pda(states: &[(VertexId, String)]) -> String {
