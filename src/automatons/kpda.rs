@@ -7,41 +7,10 @@ use crate::shared::utils::parse_char;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::VecDeque;
-use std::str::Split;
 
-type Symbol = char;
 type StackChar = char;
-type Destinations = Vec<(VertexId, Vec<String>)>;
-type Transitions = HashMap<(Symbol, Vec<StackChar>), Destinations>;
-
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
-struct Stack {
-    data: Vec<String>,
-}
-
-impl Stack {
-    fn new(k: usize) -> Self {
-        return Stack {
-            data: vec!["#".to_string(); k],
-        };
-    }
-
-    fn push_str(&mut self, next: &[String]) {
-        let mut i = 0;
-        for s in self.data.iter_mut() {
-            s.push_str(&next[i]);
-            i += 1;
-        }
-    }
-
-    fn pop(&mut self) -> Option<Vec<StackChar>> {
-        self.data.iter_mut().map(|s| s.pop()).collect()
-    }
-
-    fn is_empty(&self) -> bool {
-        self.data.iter().all(String::is_empty)
-    }
-}
+type Destinations = Vec<(VertexId, Stacks)>;
+type Transitions = HashMap<Vec<StackChar>, Destinations>;
 
 #[allow(clippy::upper_case_acronyms)]
 pub struct KPDA {
@@ -54,72 +23,48 @@ pub struct KPDA {
 
 impl KPDA {
     pub fn accepts(&self, word: &str) -> bool {
-        let mut currents: Vec<(VertexId, Stack)> = self
+        // initialize state
+        let mut seen: Vec<(VertexId, Stacks)> = self
             .start_states
             .clone()
             .into_iter()
-            .map(|state| (state, Stack::new(self.k)))
+            .map(|state| (state, Stacks::new(word, self.k)))
             .collect();
-        for symbol in word.chars() {
-            let mut new = Vec::new();
-            for current in currents.into_iter() {
-                let state = current.0;
-                let mut stack = current.1;
-                let stack_char = stack.pop();
-                if let Some(nexts) = self
-                    .states
-                    .get(&state)
-                    .and_then(|s| stack_char.and_then(|stack_char| s.get(&(symbol, stack_char))))
-                {
-                    for next in nexts.iter() {
-                        let mut stack = stack.clone();
-                        stack.push_str(&next.1);
-                        if !new.contains(&(next.0, stack.clone())) {
-                            new.push((next.0, stack));
-                        }
-                    }
+        let mut currents: VecDeque<_> = seen.clone().into();
 
-                    let mut epsilonstates = VecDeque::new();
-                    epsilonstates.push_back((state, stack.clone()));
-
-                    let mut found_new = true;
-                    while found_new {
-                        found_new = false;
-                        for _ in 0..epsilonstates.len() {
-                            let (state, mut stack) = epsilonstates.pop_front().unwrap();
-                            if let Some(nexts) = self.states.get(&state).and_then(|s| {
-                                stack.pop().and_then(|stack_char| s.get(&(' ', stack_char)))
-                            }) {
-                                for next in nexts.iter() {
-                                    let mut stack = stack.clone();
-                                    stack.push_str(&next.1);
-                                    if !epsilonstates.contains(&(next.0, stack.clone())) {
-                                        found_new = true;
-                                        epsilonstates.push_back((next.0, stack));
-                                    }
-                                }
+        // check after every step if we accepted, or no new state was found
+        while self.accepted(&currents) && !currents.is_empty() {
+            // take steps for each current state
+            for _ in 0..currents.len() {
+                let current = currents.pop_front().unwrap();
+                let stacks = current.1;
+                let transitions = self.states.get(&current.0).unwrap();
+                for next_key in transitions.keys() {
+                    // check if transition can be applied to current stacks
+                    if stacks.fits(next_key) {
+                        // apply it to all destinations
+                        for next in transitions.get(next_key).unwrap() {
+                            let next = (next.0, stacks.clone().apply(&next.1));
+                            // only apply state if it hasnt been seen yet
+                            if !seen.contains(&next) {
+                                seen.push(next.clone());
+                                currents.push_back(next);
                             }
-                        }
-                    }
-
-                    for next in epsilonstates.into_iter() {
-                        if !new.contains(&next) {
-                            new.push(next);
                         }
                     }
                 }
             }
-            new.sort_unstable();
-            new.dedup();
-            currents = new;
         }
+        // return if while broke because it accepted or because no new currents
+        self.accepted(&currents)
+    }
 
+    // helper to check for given automaton state if it is accepted
+    fn accepted(&self, currents: &VecDeque<(VertexId, Stacks)>) -> bool {
         if self.final_states.is_empty() {
-            currents.iter().any(|(_, stack)| stack.is_empty())
+            currents.iter().any(|s| s.1.all_empty())
         } else {
-            currents
-                .iter()
-                .any(|(state, _)| self.final_states.contains(state))
+            currents.iter().any(|s| self.final_states.contains(&s.0))
         }
     }
 
@@ -140,9 +85,8 @@ impl KPDA {
             out.push_str(&format!("\nState {}:", id));
             map.iter().for_each(|(label, target)| {
                 out.push_str(&format!(
-                    "\n    {} {} -> {}",
-                    &label.0.to_string(),
-                    &label.1.join(','),
+                    "\n    {} -> {}",
+                    join_chars(label),
                     &format_states_kpda(target),
                 ))
             });
@@ -159,7 +103,6 @@ impl KPDA {
             AutomatonData::Edge(source, target, label) => {
                 // info!("{label}");
                 let mut values = label.split(",");
-                let symbol = parse_char(values.next().expect("No Character given"));
                 let mut current_stacks = Vec::new();
                 let mut next_stacks = Vec::new();
                 let mut k_i = 0;
@@ -173,18 +116,24 @@ impl KPDA {
                             .to_owned(),
                     );
                 }
+
                 if k == 0 {
                     k = k_i
                 }
 
+                for c in current_stacks.iter() {
+                    if c.is_lowercase() {
+                        alphabet.insert(*c);
+                    }
+                }
+
                 logcheck_e(k == k_i, "Number of stacks not consistent.");
-                alphabet.insert(symbol);
                 states
                     .entry(source)
                     .or_insert(HashMap::new())
-                    .entry((symbol, current_stacks))
+                    .entry(current_stacks)
                     .or_insert(Vec::new())
-                    .push((target, next_stacks));
+                    .push((target, Stacks::from_data(next_stacks)));
             }
             AutomatonData::Final(id) => {
                 final_states.insert(id);
@@ -208,10 +157,57 @@ impl KPDA {
     }
 }
 
-fn format_states_kpda(states: &[(VertexId, Vec<String>)]) -> String {
+#[derive(Clone, PartialEq, Eq)]
+struct Stacks {
+    data: Vec<String>,
+}
+
+impl Stacks {
+    fn new(word: &str, k: usize) -> Self {
+        assert!(k > 0);
+        let mut data = Vec::new();
+        data.push(word.to_string());
+        for _ in 0..(k - 1) {
+            data.push("#".to_string());
+        }
+        Stacks { data }
+    }
+
+    fn from_data(data: Vec<String>) -> Self {
+        Stacks { data }
+    }
+
+    fn fits(&self, chars: &[char]) -> bool {
+        self.data
+            .iter()
+            .zip(chars)
+            .all(|(s, n)| *n == ' ' || s.ends_with(*n))
+    }
+
+    fn apply(mut self, other: &Stacks) -> Self {
+        for i in 0..self.data.len() {
+            self.data[i].push_str(&other.data[i]);
+        }
+        self
+    }
+
+    fn all_empty(&self) -> bool {
+        self.data.iter().all(|s| s.is_empty())
+    }
+}
+
+fn format_states_kpda(states: &[(VertexId, Stacks)]) -> String {
     states
         .iter()
-        .map(|(id, to_stack)| id.to_string() + &to_stack.join(","))
+        .map(|(id, to_stack)| id.to_string() + &to_stack.data.join(","))
+        .reduce(|acc, id| format!("{acc}, {id}"))
+        .unwrap()
+}
+
+fn join_chars(chars: &[char]) -> String {
+    chars
+        .iter()
+        .map(char::to_string)
         .reduce(|acc, id| format!("{acc}, {id}"))
         .unwrap()
 }
