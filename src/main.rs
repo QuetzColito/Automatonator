@@ -27,7 +27,7 @@ struct State<Automatons> {
 }
 
 impl<A> State<A> {
-    fn new(path: &str, atype: Option<String>) -> State<One> {
+    fn read_first(path: &str, atype: Option<String>) -> State<One> {
         info!("Reading Automaton from {}", path);
 
         let automaton = parse_automaton(path, atype).expect("Could not read first Automaton");
@@ -42,7 +42,7 @@ impl<A> State<A> {
 }
 
 impl State<One> {
-    fn add(
+    fn read_second(
         self,
         path: Option<String>,
         atype1: Option<String>,
@@ -108,12 +108,12 @@ fn main() {
     colog::init();
 
     // Read Single Automaton
-    let state = State::<One>::new(&args.automaton, args.automaton_type.clone());
+    let state = State::<One>::read_first(&args.automaton, args.automaton_type.clone());
     // Test Test Cases if given
     state.cases(args.testcase_file);
 
     // Compare to Reference Automaton (if given)
-    if let Some(state) = state.add(
+    if let Some(state) = state.read_second(
         args.automaton2,
         args.automaton_type,
         args.ref_automaton_type,
