@@ -2,13 +2,20 @@
 
 ## Usage
 
-Download the provided binary and run (dont forget to make it executable):
+Download the provided binary and run (dont forget to make it executable with `chmod +x`):
 
 ```
 automatonator -h
 ```
 
 If there isnt a binary provided for your System refer to [Building](#building)
+
+You can supply either one or two Automatons via their filepath.
+If the filename does not contain the type of the automaton, you need to explicitly set it with `-t`.
+If the type of the second automaton differs from the first, you can also set that with `-r`.
+You can provide a file with words (1 word per line) to test the automaton against with `-c`.
+If you provided 2 Automatons, you can set a file with words to compare them with with `-e`.
+Behind each word you need to specify the percentage by which they will be weighted in the result.
 
 ## Automaton Format
 

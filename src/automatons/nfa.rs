@@ -1,5 +1,4 @@
 use log::info;
-use log::warn;
 
 use crate::shared::automaton::*;
 use crate::shared::utils::*;
