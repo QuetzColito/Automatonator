@@ -5,6 +5,7 @@ use crate::shared::utils::format_states;
 use crate::shared::utils::parse_char;
 use std::collections::HashMap;
 use std::collections::HashSet;
+use std::iter::once;
 
 type Symbol = char;
 type StackChar = char;
@@ -27,8 +28,12 @@ impl PDA {
             .into_iter()
             .map(|state| (state, "#".to_string()))
             .collect();
-        for symbol in word.chars() {
-            let mut new = Vec::new();
+        for symbol in word.chars().chain(once(' ')) {
+            let mut new = if symbol != ' ' {
+                Vec::new()
+            } else {
+                currents.clone()
+            };
             let mut seen_states = currents.clone();
             while let Some(current) = currents.pop() {
                 let state = current.0;
